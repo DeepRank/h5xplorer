@@ -13,7 +13,7 @@ from PyQt5.QtCore import pyqtSignal,pyqtSlot
 from PyQt5.QtWidgets import QApplication, QTreeView, QFrame, QFileIconProvider, QMenuBar
 import h5py
 import functools
-
+import numpy as np
 # Import the console machinery from ipython
 from qtconsole.rich_ipython_widget import RichIPythonWidget,RichJupyterWidget
 from qtconsole.inprocess import QtInProcessKernelManager
@@ -176,13 +176,14 @@ class HDF5ItemModel(QtCore.QAbstractItemModel):
     https://github.com/nanophotonics/nplab/blob/master/nplab/ui/hdf5_browser.py
     """
 
-    def __init__(self,data_group,res):
+    def __init__(self,data_group,res,extended_selection):
 
         super().__init__()
         self.root_item = None
         self.data_group = data_group
         self.iconProvider = QFileIconProvider()
         self.res = res
+        self.extended_selection = extended_selection
 
         #self.selections = QItemSelectionModel(self)
 
@@ -243,11 +244,21 @@ class HDF5ItemModel(QtCore.QAbstractItemModel):
         if role == QtCore.Qt.DisplayRole:
             item = self._index_to_item(index)
 
-            # for the targets we pint the name and values
-            if item.parent.basename == 'targets':
+            # If the dataset is one number we print the value in the name
+            #if item.parent.basename == 'targets':
+            try:
                 value = item.data_file[item.name].value
-                return "{:10s}".format(item.basename) + ' %1.3f' %value
+                if not isinstance(value,np.ndarray):
+                    return "{:10s}".format(item.basename) + '\tvalue : %1.3e' %value
 
+                else:
+                    if value.shape == (1,):
+                        return "{:10s}".format(item.basename) + '\tvalue : %1.3e' %value
+                    else:
+                        dims = ' x '.join(map(lambda x: str(x),value.shape))
+                        return "{:10s}".format(item.basename) + '\tsize : ' + dims
+            except Exception as ex:
+                pass
             # for the rest just the values
             return self._index_to_item(index).basename
 
@@ -329,192 +340,9 @@ class HDF5ItemModel(QtCore.QAbstractItemModel):
         treeview.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         treeview.customContextMenuRequested.connect(functools.partial(self.context_menu, treeview))
 
-    '''
-    def context_menu(self, treeview, position):
-
-        """Generate a right-click menu for the items"""
-
-        # make sure tha there is only one item selected
-        items = [self._index_to_item(index) for index in treeview.selectedIndexes()]
-        if len(items)!=1:
-            return
-        item = items[0]
-
-        try:
-            _type = self.root_item.data_file[item.name].attrs['type']
-
-            if _type == 'molecule':
-                self._context_mol(item,treeview,position)
-
-            if _type == 'sparse_matrix':
-                self._context_sparse(item,treeview,position)
-
-            if _type == 'epoch':
-                self._context_epoch(item,treeview,position)
-
-            if _type == 'losses':
-                self._context_losses(item,treeview,position)
-
-        except:
-            return
-
-    def _context_mol(self,item,treeview,position):
-
-        menu = QtWidgets.QMenu()
-        actions = {}
-        list_operations = ['Load in PyMol','Load in VMD','PDB2SQL']
-
-        for operation in list_operations:
-            actions[operation] = menu.addAction(operation)
-        action = menu.exec_(treeview.viewport().mapToGlobal(position))
-
-        if action == actions['Load in VMD']:
-            _,cplx_name,mol_name = item.name.split('/')
-            molgrp = self.root_item.data_file[item.name]
-            viztools.create3Ddata(mol_name,molgrp)
-            viztools.launchVMD(mol_name,self.res)
-
-        if action == actions['Load in PyMol']:
-            _,cplx_name,mol_name = item.name.split('/')
-            molgrp = self.root_item.data_file[item.name]
-            viztools.create3Ddata(mol_name,molgrp)
-            viztools.launchPyMol(mol_name)
-
-        if action == actions['PDB2SQL']:
-            _,cplx_name,mol_name = item.name.split('/')
-            molgrp = self.root_item.data_file[item.name]
-            db = pdb2sql(molgrp['complex'].value)
-            treeview.emitDict.emit({'sql_' + item.basename: db})
-
-    def _context_sparse(self,item,treeview,position):
-
-        menu = QtWidgets.QMenu()
-        actions = {}
-        list_operations = ['Load Matrix','Plot Histogram']
-
-        for operation in list_operations:
-            actions[operation] = menu.addAction(operation)
-        action = menu.exec_(treeview.viewport().mapToGlobal(position))
-        name = item.basename + '_' + item.name.split('/')[2]
-
-        if action == actions['Load Matrix']:
-
-            subgrp = item.data_file[item.name]
-            data_dict = {}
-            if not subgrp.attrs['sparse']:
-                data_dict[item.name] =  subgrp['value'].value
-            else:
-                molgrp = item.data_file[item.parent.parent.parent.name]
-                grid = {}
-                lx = len(molgrp['grid_points/x'].value)
-                ly = len(molgrp['grid_points/y'].value)
-                lz = len(molgrp['grid_points/z'].value)
-                shape = (lx,ly,lz)
-                spg = sparse.FLANgrid(sparse=True,index=subgrp['index'].value,value=subgrp['value'].value,shape=shape)
-                data_dict[name] =  spg.to_dense()
-            treeview.emitDict.emit(data_dict)
-
-        if action == actions['Plot Histogram']:
-
-            value = item.data_file[item.name]['value'].value
-            data_dict = {'value':value}
-            treeview.emitDict.emit(data_dict)
-
-            cmd = "%matplotlib inline\nimport matplotlib.pyplot as plt\nplt.hist(value,25)\nplt.show()\n"            
-            data_dict = {'exec_cmd':cmd}
-            treeview.emitDict.emit(data_dict)
-
-    def _context_epoch(self,item,treeview,position):
-
-        menu = QtWidgets.QMenu()
-        actions = {}
-        list_operations = ['Scatter Plot']
-
-        for operation in list_operations:
-            actions[operation] = menu.addAction(operation)
-        action = menu.exec_(treeview.viewport().mapToGlobal(position))
-
-        if action == actions['Scatter Plot']:
-
-
-            values = []
-            train_out = item.data_file[item.name+'/train/outputs'].value
-            train_tar = item.data_file[item.name+'/train/targets'].value
-            values.append([x for x in train_out])
-            values.append([x for x in train_tar])
-
-
-            valid_out = item.data_file[item.name+'/valid/outputs'].value
-            valid_tar = item.data_file[item.name+'/valid/targets'].value
-            values.append([x for x in valid_tar])
-            values.append([x for x in valid_out])
-
-
-            test_out = item.data_file[item.name+'/test/outputs'].value
-            test_tar = item.data_file[item.name+'/test/targets'].value
-            values.append([x for x in test_tar])
-            values.append([x for x in test_out])
-
-            vmin = np.array([x for a in values for x in a]).min()
-            vmax = np.array([x for a in values for x in a]).max()
-            delta = vmax-vmin
-            values.append([vmax + 0.1*delta])
-            values.append([vmin - 0.1*delta])
-
-            data_dict = {'_values':values}
-            treeview.emitDict.emit(data_dict)
-
-            data_dict = {}
-            cmd  = "%matplotlib inline\nimport matplotlib.pyplot as plt\n"
-            cmd += "fig,ax = plt.subplots()\n"
-            cmd += "ax.scatter(_values[0],_values[1],c='red',label='train')\n"
-            cmd += "ax.scatter(_values[2],_values[3],c='blue',label='valid')\n"
-            cmd += "ax.scatter(_values[4],_values[5],c='green',label='test')\n"
-            cmd += "legen = ax.legend(loc='upper left')\n"
-            cmd += "ax.set_xlabel('Targets')\n"
-            cmd += "ax.set_ylabel('Predictions')\n"
-            cmd += "ax.plot([_values[-2],_values[-1]],[_values[-2],_values[-1]])\n"
-            cmd += "plt.show()\n" 
-            data_dict['exec_cmd'] = cmd
-            treeview.emitDict.emit(data_dict)
-
-    def _context_losses(self,item,treeview,position):
-
-        menu = QtWidgets.QMenu()
-        actions = {}
-        list_operations = ['Plot Losses']
-
-        for operation in list_operations:
-            actions[operation] = menu.addAction(operation)
-        action = menu.exec_(treeview.viewport().mapToGlobal(position))
-
-        if action == actions['Plot Losses']:
-
-
-            values = []
-            test = item.data_file[item.name+'/test'].value
-            train = item.data_file[item.name+'/train'].value
-            valid = item.data_file[item.name+'/valid'].value
-            values.append([x for x in train])
-            values.append([x for x in valid])
-            values.append([x for x in test])
-
-            data_dict = {'_values':values}
-            treeview.emitDict.emit(data_dict)
-
-            data_dict = {}
-            cmd  = "%matplotlib inline\nimport matplotlib.pyplot as plt\n"
-            cmd += "fig,ax = plt.subplots()\n"
-            cmd += "plt.plot(_values[0],c='red',label='train')\n"
-            cmd += "plt.plot(_values[1],c='blue',label='valid')\n"
-            cmd += "plt.plot(_values[2],c='green',label='test')\n"
-            cmd += "legen = ax.legend(loc='upper right')\n"
-            cmd += "ax.set_xlabel('Epoch')\n"
-            cmd += "ax.set_ylabel('Losses')\n"
-            cmd += "plt.show()\n"
-            data_dict['exec_cmd'] = cmd
-            treeview.emitDict.emit(data_dict)
-    '''
+        # set the selection Mode
+        if self.extended_selection:
+            treeview.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
 class HDF5TreeWidget(QtWidgets.QTreeView):
 
@@ -522,7 +350,7 @@ class HDF5TreeWidget(QtWidgets.QTreeView):
     emitDict = pyqtSignal(dict)
 
     """A TreeView for looking at an HDF5 tree"""
-    def __init__(self, datafile,res=None, menu=None, **kwargs):
+    def __init__(self, datafile,res=None, menu=None,extended_selection=False, **kwargs):
         """Create a TreeView widget that views the contents of an HDF5 tree.
         Arguments:
             datafile : nplab.datafile.Group
@@ -531,7 +359,7 @@ class HDF5TreeWidget(QtWidgets.QTreeView):
         You may want to include parent, for example."""
         QtWidgets.QTreeView.__init__(self, **kwargs)
 
-        self.model = HDF5ItemModel(datafile,res)
+        self.model = HDF5ItemModel(datafile,res,extended_selection=extended_selection)
         self.model.context_menu = types.MethodType(menu, self.model)
         self.model.set_up_treeview(self)
         self.sizePolicy().setHorizontalStretch(0)
@@ -568,7 +396,7 @@ class HDF5Browser(QtWidgets.QWidget):
     """A Qt Widget for browsing an HDF5 file and graphing the data.
     """
 
-    def __init__(self, data_file, res, func_menu, parent=None):
+    def __init__(self, data_file, res, func_menu,extended_selection=False, parent=None):
 
         super(HDF5Browser, self).__init__(parent)
 
@@ -580,7 +408,10 @@ class HDF5Browser(QtWidgets.QWidget):
         icon = ip.icon(QFileIconProvider.Drive)
 
         # the tree widget
-        self.treeWidget = HDF5TreeWidget(data_file,res=self.res,menu=func_menu,parent=self)
+        if func_menu is None:
+            func_menu = lambda a, b, c: None
+        self.treeWidget = HDF5TreeWidget(data_file,res=self.res,menu=func_menu,
+            extended_selection=extended_selection,parent=self)
         self.selection_model = self.treeWidget.selectionModel()
 
         # push button to load data
@@ -596,7 +427,7 @@ class HDF5Browser(QtWidgets.QWidget):
         self.treelayoutwidget.layout().addWidget(self.load_tree_button)
 
         #the Ipython console
-        self.ipyConsole = QIPythonWidget(customBanner="Welcome to the DeepRank Explorer\n")
+        self.ipyConsole = QIPythonWidget(customBanner="Welcome to H5xplorer\n")
 
         # make the splitt window
         splitter = QtWidgets.QSplitter()
@@ -629,7 +460,7 @@ class HDF5Browser(QtWidgets.QWidget):
 
 class h5xplorer(object):
 
-    def __init__(self,func_menu):
+    def __init__(self,func_menu=None,extended_selection=False):
 
         app = QApplication(sys.argv)
         res = app.desktop().screenGeometry()
@@ -637,7 +468,7 @@ class h5xplorer(object):
 
         data_file = h5py.File('_tmp.hdf5','w')
 
-        ui = HDF5Browser(data_file,res,func_menu)
+        ui = HDF5Browser(data_file,res,func_menu,extended_selection=extended_selection)
 
         ui.show()
         sys.exit(app.exec_())
