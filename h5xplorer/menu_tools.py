@@ -19,16 +19,17 @@ def get_group_data(group):
         print(ex)
         return None
 
-def get_actions(treeview,position,list_action):
+def get_actions(treeview,position,list_action,sub_list=None):
 
-    menu = QtWidgets.QMenu()
-    actions = {}
+    if sub_list is None:
 
-    for operation in list_action:
-        actions[operation] = menu.addAction(operation)
-    selected_action = menu.exec_(treeview.viewport().mapToGlobal(position))
-    return selected_action,actions
+        menu = QtWidgets.QMenu()
+        actions = {}
 
+        for operation in list_action:
+            actions[operation] = menu.addAction(operation)
+        selected_action = menu.exec_(treeview.viewport().mapToGlobal(position))
+        return selected_action,actions
 
 def send_dict_to_console(self,item,treeview):
 
