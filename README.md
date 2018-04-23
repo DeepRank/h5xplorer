@@ -11,6 +11,9 @@ pip install ./
 
 ## Example
 
+
+![alt-text](./h5x.png)
+
 For example the main file can look like that
 
 ```python
@@ -63,5 +66,3 @@ def context_menu(self, treeview, position):
             plot1D(self,item0,item1,treeview,plot='line')
 
 ```
-
-![alt-text](./h5x.png)
