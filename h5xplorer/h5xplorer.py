@@ -1,55 +1,69 @@
 #!/usr/bin/env python
 
-
-#################################################################################
-##
-##
-#################################################################################
+############################################################################################
+## Source : https://github.com/nanophotonics/nplab/blob/master/nplab/ui/hdf5_browser.py
+##          https://stackoverflow.com/questions/11513132/embedding-ipython-qt-console-in-a-pyqt-application
+##########################################################################################
 
 import os,sys
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QAbstractItemModel, QFile, QIODevice, QModelIndex, Qt, QItemSelectionModel
 from PyQt5.QtCore import pyqtSignal,pyqtSlot
-from PyQt5.QtWidgets import QApplication, QTreeView, QFrame, QFileIconProvider, QMenuBar
+from PyQt5.QtWidgets import QApplication, QTreeView, QFrame, QFileIconProvider, QMenuBar,QErrorMessage, QMessageBox
 import h5py
 import functools
 import numpy as np
+
 # Import the console machinery from ipython
-from qtconsole.rich_ipython_widget import RichIPythonWidget,RichJupyterWidget
+from qtconsole.rich_ipython_widget import RichJupyterWidget
 from qtconsole.inprocess import QtInProcessKernelManager
 from IPython.lib import guisupport
 import types
 
-
+from .default_menu import default_context_menu
 
 class QIPythonWidget(RichJupyterWidget):
 
-    """
-    Convenience class for a live IPython console widget.
-    We can replace the standard banner using the customBanner argument
-    https://stackoverflow.com/questions/11513132/embedding-ipython-qt-console-in-a-pyqt-application
-
-    possible colors lightbg,linux,nocolor
-    """
-
-
     def __init__(self,customBanner=None,colors='lightbg',*args,**kwargs):
-        if not customBanner is None: self.banner=customBanner
+        """Convenience class for a live IPython console widget.
+        Adapted from the pyQT example
+
+        Attributes:
+            banner (str): banner on top of the console
+            kernel_client (kernel_manager.client): client for the kernel
+            kernel_manager (QtInProcessKernelManager): kernel manager
+
+        Args:
+            customBanner (str, optional): Custom banner
+            colors (str, optional): Colorschem for the console: lightbg,linux,nocolor
+            *args: Description
+            **kwargs: Description
+        """
         super(QIPythonWidget, self).__init__(*args,**kwargs)
-        self.kernel_manager = kernel_manager = QtInProcessKernelManager()
-        kernel_manager.start_kernel()
-        kernel_manager.kernel.gui = 'qt4'
-        self.kernel_client = kernel_client = self._kernel_manager.client()
-        kernel_client.start_channels()
+
+        if not customBanner is None:
+            self.banner=customBanner
+
+        # create an Inprocess kernel
+        self.kernel_manager = QtInProcessKernelManager()
+        self.kernel_manager.start_kernel()
+        self.kernel_manager.kernel.gui = 'qt4'
+
+        self.kernel_client = self._kernel_manager.client()
+        self.kernel_client.start_channels()
+
         self.set_default_style(colors=colors)
-        def stop():
-            kernel_client.stop_channels()
-            kernel_manager.shutdown_kernel()
-            guisupport.get_app_qt4().exit()
-        self.exit_requested.connect(stop)
+
+        self.exit_requested.connect(self.stop)
 
     def pushVariables(self,variableDict):
-        """ Given a dictionary containing name / value pairs, push those variables to the IPython console widget """
+        """ Given a dictionary containing name / value pairs,
+        push those variables to the IPython console widget
+
+        Args:
+            variableDict: dict of var {names: value}
+
+        """
         self.kernel_manager.kernel.shell.push(variableDict)
 
     def clearTerminal(self):
@@ -57,19 +71,41 @@ class QIPythonWidget(RichJupyterWidget):
         self._control.clear()
 
     def printText(self,text):
-        """ Prints some plain text to the console """
+        """ Prints some plain text to the console.
+
+        Args:
+            text (str): text to be printed
+
+        """
         self._append_plain_text(text)
 
     def executeCommand(self,command,hidden=False,interactive=False):
-        """ Execute a command in the frame of the console widget """
+        """Execute a command in the frame of the console widget
+
+        Args:
+            command (str): Command to execute
+            hidden (bool, optional): hid the command or not
+            interactive (bool, optional): Interactive Mode
+        """
         self.execute(source=command,hidden=hidden,interactive=interactive)
 
     def import_value(self,HDF5Object):
+        """Import the value of a HDF5 object
+
+        Args:
+            HDF5Object (HDF5 item): Instance of a HDF5 item
+        """
         HDF5Object.emitDict.connect(self.get_value)
 
     @pyqtSlot(dict)
     def get_value(self,variableDict):
+        """Get the dict of variables emmitted by the treeview.
+        Note: if the name of variable starts with _ the value is NOT
+        printed in the console.
 
+        Args:
+            variableDict (dict): dict of variables {name: value}
+        """
         # exectute a command
         keys = list(variableDict.keys())
         if keys[0].startswith('exec_cmd'):
@@ -84,8 +120,24 @@ class QIPythonWidget(RichJupyterWidget):
                 if not k.startswith('_'):
                     self.executeCommand('%s' %k)
 
+    def stop():
+        """Stop the kernel."""
+        self.kernel_client.stop_channels()
+        self.kernel_manager.shutdown_kernel()
+        guisupport.get_app_qt4().exit()
+
+
+
 class DummyHDF5Group(dict):
+
     def __init__(self,dictionary, attrs ={}, name="DummyHDF5Group"):
+        """Dummy HDF5 group created sometimes ....
+
+        Args:
+            dictionary (dict):
+            attrs (dict, optional):
+            name (str, optional): Name of the group
+        """
         super(DummyHDF5Group, self).__init__()
         self.attrs = attrs
         for key in dictionary:
@@ -98,22 +150,15 @@ class DummyHDF5Group(dict):
 
 class HDF5TreeItem(object):
 
-    '''
-    Item in an HDF5 Tree
-    https://github.com/nanophotonics/nplab/blob/master/nplab/ui/hdf5_browser.py
-    '''
-
     def __init__(self,data_file,parent,name,row):
 
         """Create a new item for an HDF5 tree
-        data_file : HDF5 data file
-            This is the file (NB must be the top-level group) containing everything
-        parent : HDF5TreeItem
-            The parent of the current item
-        name : string
-            The name of the current item (should be parent.name plus an extra component)
-        row : int
-            The index of the current item in the parent's children.
+
+        Args:
+            data_file ( HDF5 data file): This is the file (NB must be the top-level group) containing everything
+            parent (HDF5TreeItem): The parent of the current item
+            name (string): The name of the current item (should be parent.name plus an extra component)
+            row (int): The index of the current item in the parent's children.
         """
 
         self.data_file = data_file
@@ -147,7 +192,8 @@ class HDF5TreeItem(object):
         return self._children
 
     def purge_children(self):
-        """Empty the cached list of children"""
+        """Empty the cached list of children."""
+
         try:
             if self._children is not None:
                 for child in self._children:
@@ -162,6 +208,7 @@ class HDF5TreeItem(object):
     @property
     def h5item(self):
         """The underlying HDF5 item for this tree item."""
+
         assert self.name in self.data_file, "Error, {} is no longer a valid HDF5 item".format(self.name)
         return self.data_file[self.name]
 
@@ -169,23 +216,26 @@ class HDF5TreeItem(object):
         self.purge_children()
 
 class HDF5ItemModel(QtCore.QAbstractItemModel):
-    """
-    This model takes its data from an HDF5 Group for display in a tree.
+
+    """This model takes its data from an HDF5 Group for display in a tree.
     It loads the file as the tree is expanded for speed - in the future it might implement sanity checks to
     abort loading very long folders.
-    https://github.com/nanophotonics/nplab/blob/master/nplab/ui/hdf5_browser.py
     """
 
     def __init__(self,data_group,res,extended_selection):
+        """Init the class
 
+        Args:
+            data_group (HDF5 grup): HDF5 group
+            res (qt resolution): size of the app
+            extended_selection (bool): allow multiple selection
+        """
         super().__init__()
         self.root_item = None
         self.data_group = data_group
         self.iconProvider = QFileIconProvider()
         self.res = res
         self.extended_selection = extended_selection
-
-        #self.selections = QItemSelectionModel(self)
 
     _data_group = None
     @property
@@ -197,25 +247,36 @@ class HDF5ItemModel(QtCore.QAbstractItemModel):
 
     @data_group.setter
     def data_group(self, new_data_group):
-        """Set the data group represented by the model"""
+        """Set the data group represented by the model."""
+
         if self.root_item is not None:
             del self.root_item
         self._data_group = new_data_group
         self.root_item = HDF5TreeItem(new_data_group.file, None, new_data_group.name, 0)
 
     def _index_to_item(self,index):
-        ''' return tthe HDF5Item for a given index'''
+        '''return the HDF5Item for a given index.
+
+        Args:
+            index (int): index of the item
+
+        Returns:
+            HDF5item: corresponding item
+        '''
+
         if index.isValid():
             return index.internalPointer()
         else:
             return self.root_item
 
-
     def index(self,row,column,parent_index):
-        """Return the index of the <row>th child of parent
-        :type row: int
-        :type column: int
-        :type parent_index: QtCore.QModelIndex
+        """Return the index of the <row>th child of parent.
+
+        Args:
+            row (int): row index
+            column (int): column index
+            parent_index (QtCore.QModelIndex): Parent
+
         """
         try:
             parent = self._index_to_item(parent_index)
@@ -261,11 +322,6 @@ class HDF5ItemModel(QtCore.QAbstractItemModel):
                 pass
             # for the rest just the values
             return self._index_to_item(index).basename
-
-        # elif role == QtCore.Qt.WhatsThisRole:
-        #     if not self._index_to_item(index)._has_children:
-        #         print(self._index_to_item(index).basename)
-        #     return print(self._index_to_item(index).basename)
 
         elif role == Qt.DecorationRole:
             if self._index_to_item(index)._has_children:
@@ -385,8 +441,11 @@ class HDF5TreeWidget(QtWidgets.QTreeView):
 
         # if the item has no children we push the raw data
         if not item._has_children:
-            name = item.basename + '_' + item.name.split('/')[2]
-            self.emitDict.emit({name: item.data_file[item.name].value})
+            try:
+                name = item.basename + '_' + item.name.split('/')[2]
+                self.emitDict.emit({name: item.data_file[item.name].value})
+            except:
+                self.emitDict.emit({name: 'Corrupted data'})
 
         # or we skip
         else:
@@ -427,7 +486,7 @@ class HDF5Browser(QtWidgets.QWidget):
         self.treelayoutwidget.layout().addWidget(self.load_tree_button)
 
         #the Ipython console
-        self.ipyConsole = QIPythonWidget(customBanner="Welcome to H5xplorer\n")
+        self.ipyConsole = QIPythonWidget()
 
         # make the splitt window
         splitter = QtWidgets.QSplitter()
@@ -445,11 +504,14 @@ class HDF5Browser(QtWidgets.QWidget):
         fname = QtWidgets.QFileDialog.getOpenFileName(self,'Open File','./')
         fname = fname[0]
         if os.path.isfile(fname):
-            print('Load File ' + fname)
-            mol_name = os.path.splitext(os.path.basename(fname))[0]
-            if mol_name not in self.data_file:
-                self.data_file[mol_name] = h5py.ExternalLink(fname,'/')
-                self.treeWidget.model.refresh_tree()
+            if h5py.is_hdf5(fname):
+                mol_name = os.path.splitext(os.path.basename(fname))[0]
+                if mol_name not in self.data_file:
+                    self.data_file[mol_name] = h5py.ExternalLink(fname,'/')
+                    self.treeWidget.model.refresh_tree()
+            else:
+                errorMessageDialog = QMessageBox.information(self,
+                "File Invalid", "Not a HDF5 File. if you're trying a netCDF3 file convert it to netCDf4 before")
 
     def sizeHint(self):
         #return QtCore.QSize(int(self.res.width()/2),int(self.res.height()))
@@ -460,20 +522,24 @@ class HDF5Browser(QtWidgets.QWidget):
 
 class h5xplorer(object):
 
-    def __init__(self,func_menu=None,extended_selection=False):
+    def __init__(self,func_menu=default_context_menu,extended_selection=False):
 
         app = QApplication(sys.argv)
         res = app.desktop().screenGeometry()
         w,h = res.width(),res.height()
 
-        data_file = h5py.File('_tmp.hdf5','w')
+        self.tmp_file = '_tmp.hdf5'
+        self.data_file = h5py.File(self.tmp_file,'w')
 
-        ui = HDF5Browser(data_file,res,func_menu,extended_selection=extended_selection)
+        ui = HDF5Browser(self.data_file,res,func_menu,extended_selection=extended_selection)
 
         ui.show()
+        app.aboutToQuit.connect(self.cleanup)
         sys.exit(app.exec_())
-        data_file.close()
+
+    def cleanup(self):
+        self.data_file.close()
+        os.remove(self.tmp_file)
 
 if __name__ == '__main__':
-
     app = h5xplorer(menu.context_menu)
