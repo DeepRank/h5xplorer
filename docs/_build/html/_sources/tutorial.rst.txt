@@ -1,0 +1,13 @@
+Tutorial : The simplest app
+===============================
+
+h5xplorer allows to create an app very quickly thanks to default context menu that are automatically used if nothing else is specified. In a new file enters.
+
+>>> #!/usr/bin/env python
+>>> from h5xplorer.h5xplorer import h5xplorer
+>>> app = h5xplorer()
+
+Execute this file and you'll be able to explore our hdf5 file
+
+Tutorial : A bit more advanced then
+=====================================

@@ -1,0 +1,259 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Plotting routines &#8212; h5xplorer 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Core design of the app" href="h5xplorer.core.html" />
+    <link rel="prev" title="Get items" href="h5xplorer.tools.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="h5xplorer.core.html" title="Core design of the app"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="h5xplorer.tools.html" title="Get items"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">h5xplorer 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="documentation.html" accesskey="U">Documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="plotting-routines">
+<h1>Plotting routines<a class="headerlink" href="#plotting-routines" title="Permalink to this headline">¶</a></h1>
+<p>Some functionalities are preimplemented to plot dataset in the QT console</p>
+<div class="section" id="module-h5xplorer.menu_plot">
+<span id="api"></span><h2>API<a class="headerlink" href="#module-h5xplorer.menu_plot" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="h5xplorer.menu_plot.plot_histogram">
+<code class="descclassname">h5xplorer.menu_plot.</code><code class="descname">plot_histogram</code><span class="sig-paren">(</span><em>self</em>, <em>item</em>, <em>treeview</em>, <em>nbins=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/h5xplorer/menu_plot.html#plot_histogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#h5xplorer.menu_plot.plot_histogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot an histogram of the data</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">context_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">treeview</span><span class="p">,</span><span class="n">position</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">all_item</span> <span class="o">=</span> <span class="n">get_current_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">treeview</span><span class="p">,</span><span class="n">single</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">item</span> <span class="o">=</span> <span class="n">all_item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">list_operations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Plot Hist&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">action</span><span class="p">,</span><span class="n">actions</span> <span class="o">=</span> <span class="n">get_actions</span><span class="p">(</span><span class="n">treeview</span><span class="p">,</span><span class="n">position</span><span class="p">,</span><span class="n">list_operations</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="n">actions</span><span class="p">[</span><span class="s1">&#39;Plot Hist&#39;</span><span class="p">]:</span>
+<span class="go">            plot_histogram(self,item,treeview)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>item</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeItem" title="h5xplorer.h5xplorer.HDF5TreeItem"><em>HDF5TreeItem</em></a>) – treeview item</li>
+<li><strong>treeview</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeWidget" title="h5xplorer.h5xplorer.HDF5TreeWidget"><em>HDF5TreeWidget</em></a>) – treeview</li>
+<li><strong>nbins</strong> (<em>int</em><em>, </em><em>optional</em>) – number of bins in the histogram</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5xplorer.menu_plot.plot_line">
+<code class="descclassname">h5xplorer.menu_plot.</code><code class="descname">plot_line</code><span class="sig-paren">(</span><em>self</em>, <em>item</em>, <em>treeview</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/h5xplorer/menu_plot.html#plot_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#h5xplorer.menu_plot.plot_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a line plot of a single item VS its index</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">context_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">treeview</span><span class="p">,</span><span class="n">position</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">all_item</span> <span class="o">=</span> <span class="n">get_current_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">treeview</span><span class="p">,</span><span class="n">single</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">item</span> <span class="o">=</span> <span class="n">all_item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">list_operations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Plot Line&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">action</span><span class="p">,</span><span class="n">actions</span> <span class="o">=</span> <span class="n">get_actions</span><span class="p">(</span><span class="n">treeview</span><span class="p">,</span><span class="n">position</span><span class="p">,</span><span class="n">list_operations</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="n">actions</span><span class="p">[</span><span class="s1">&#39;Plot Line&#39;</span><span class="p">]:</span>
+<span class="go">            plot_line(self,item,treeview)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>item</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeItem" title="h5xplorer.h5xplorer.HDF5TreeItem"><em>HDF5TreeItem</em></a>) – treeview item</li>
+<li><strong>treeview</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeWidget" title="h5xplorer.h5xplorer.HDF5TreeWidget"><em>HDF5TreeWidget</em></a>) – treeview</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5xplorer.menu_plot.plot1D">
+<code class="descclassname">h5xplorer.menu_plot.</code><code class="descname">plot1D</code><span class="sig-paren">(</span><em>self</em>, <em>item0</em>, <em>item1</em>, <em>treeview</em>, <em>plot='line'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/h5xplorer/menu_plot.html#plot1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#h5xplorer.menu_plot.plot1D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a XY line or scatter plot of two items</p>
+<p>Note: You must be able to select multiple items to use this method.
+So you must create the app with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">h5xplorer</span><span class="p">(</span><span class="n">extended_selection</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">context_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">treeview</span><span class="p">,</span><span class="n">position</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">all_item</span> <span class="o">=</span> <span class="n">get_current_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">treeview</span><span class="p">,</span><span class="n">single</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">item0</span> <span class="o">=</span> <span class="n">all_item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">item1</span> <span class="o">=</span> <span class="n">all_item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">list_operations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Plot1D&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">action</span><span class="p">,</span><span class="n">actions</span> <span class="o">=</span> <span class="n">get_actions</span><span class="p">(</span><span class="n">treeview</span><span class="p">,</span><span class="n">position</span><span class="p">,</span><span class="n">list_operations</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="n">actions</span><span class="p">[</span><span class="s1">&#39;Plot1D&#39;</span><span class="p">]:</span>
+<span class="go">            plot1D(self,item0,item1,treeview)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>item0</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeItem" title="h5xplorer.h5xplorer.HDF5TreeItem"><em>HDF5TreeItem</em></a>) – treeview item for the X data</li>
+<li><strong>item1</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeItem" title="h5xplorer.h5xplorer.HDF5TreeItem"><em>HDF5TreeItem</em></a>) – treeview item for the Y data</li>
+<li><strong>treeview</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeWidget" title="h5xplorer.h5xplorer.HDF5TreeWidget"><em>HDF5TreeWidget</em></a>) – treeview</li>
+<li><strong>plot</strong> (<em>str</em><em>, </em><em>optional</em>) – ‘line’ or ‘scatter’</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5xplorer.menu_plot.plot2d">
+<code class="descclassname">h5xplorer.menu_plot.</code><code class="descname">plot2d</code><span class="sig-paren">(</span><em>self</em>, <em>item</em>, <em>treeview</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/h5xplorer/menu_plot.html#plot2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#h5xplorer.menu_plot.plot2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a map of a 2D data array</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">context_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">treeview</span><span class="p">,</span><span class="n">position</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">all_item</span> <span class="o">=</span> <span class="n">get_current_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">treeview</span><span class="p">,</span><span class="n">single</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">item</span> <span class="o">=</span> <span class="n">all_item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">list_operations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Plot2D&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">action</span><span class="p">,</span><span class="n">actions</span> <span class="o">=</span> <span class="n">get_actions</span><span class="p">(</span><span class="n">treeview</span><span class="p">,</span><span class="n">position</span><span class="p">,</span><span class="n">list_operations</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="n">actions</span><span class="p">[</span><span class="s1">&#39;Plot2D&#39;</span><span class="p">]:</span>
+<span class="go">            plot2D(self,item,treeview)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>item</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeItem" title="h5xplorer.h5xplorer.HDF5TreeItem"><em>HDF5TreeItem</em></a>) – treeview item</li>
+<li><strong>treeview</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeWidget" title="h5xplorer.h5xplorer.HDF5TreeWidget"><em>HDF5TreeWidget</em></a>) – treeview</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table Of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial : The simplest app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html#tutorial-a-bit-more-advanced-then">Tutorial : A bit more advanced then</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="h5xplorer.tools.html">Get items</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Plotting routines</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-h5xplorer.menu_plot">API</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="h5xplorer.core.html">Core design of the app</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="h5xplorer.tools.html"
+                        title="previous chapter">Get items</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="h5xplorer.core.html"
+                        title="next chapter">Core design of the app</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/h5xplorer.plot.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="h5xplorer.core.html" title="Core design of the app"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="h5xplorer.tools.html" title="Get items"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">h5xplorer 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="documentation.html" >Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Nicolas Renaud.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.
+    </div>
+  </body>
+</html>

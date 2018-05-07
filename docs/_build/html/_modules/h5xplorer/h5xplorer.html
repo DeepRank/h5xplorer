@@ -1,0 +1,642 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>h5xplorer.h5xplorer &#8212; h5xplorer 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">h5xplorer 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for h5xplorer.h5xplorer</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="c1">############################################################################################</span>
+<span class="c1">## Source : https://github.com/nanophotonics/nplab/blob/master/nplab/ui/hdf5_browser.py</span>
+<span class="c1">##          https://stackoverflow.com/questions/11513132/embedding-ipython-qt-console-in-a-pyqt-application</span>
+<span class="c1">##########################################################################################</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">PyQt5</span> <span class="k">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtCore</span> <span class="k">import</span> <span class="n">QAbstractItemModel</span><span class="p">,</span> <span class="n">QFile</span><span class="p">,</span> <span class="n">QIODevice</span><span class="p">,</span> <span class="n">QModelIndex</span><span class="p">,</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QItemSelectionModel</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtCore</span> <span class="k">import</span> <span class="n">pyqtSignal</span><span class="p">,</span><span class="n">pyqtSlot</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtWidgets</span> <span class="k">import</span> <span class="n">QApplication</span><span class="p">,</span> <span class="n">QTreeView</span><span class="p">,</span> <span class="n">QFrame</span><span class="p">,</span> <span class="n">QFileIconProvider</span><span class="p">,</span> <span class="n">QMenuBar</span><span class="p">,</span><span class="n">QErrorMessage</span><span class="p">,</span> <span class="n">QMessageBox</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># Import the console machinery from ipython</span>
+<span class="kn">from</span> <span class="nn">qtconsole.rich_ipython_widget</span> <span class="k">import</span> <span class="n">RichJupyterWidget</span>
+<span class="kn">from</span> <span class="nn">qtconsole.inprocess</span> <span class="k">import</span> <span class="n">QtInProcessKernelManager</span>
+<span class="kn">from</span> <span class="nn">IPython.lib</span> <span class="k">import</span> <span class="n">guisupport</span>
+<span class="kn">import</span> <span class="nn">types</span>
+
+<span class="kn">from</span> <span class="nn">.default_menu</span> <span class="k">import</span> <span class="n">default_context_menu</span>
+
+<div class="viewcode-block" id="QIPythonWidget"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.QIPythonWidget">[docs]</a><span class="k">class</span> <span class="nc">QIPythonWidget</span><span class="p">(</span><span class="n">RichJupyterWidget</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">customBanner</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="s1">&#39;lightbg&#39;</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convenience class for a live IPython console widget.</span>
+<span class="sd">        Adapted from the pyQT example</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            banner (str): banner on top of the console</span>
+<span class="sd">            kernel_client (kernel_manager.client): client for the kernel</span>
+<span class="sd">            kernel_manager (QtInProcessKernelManager): kernel manager</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            customBanner (str, optional): Custom banner</span>
+<span class="sd">            colors (str, optional): Colorschem for the console: lightbg,linux,nocolor</span>
+<span class="sd">            *args: Description</span>
+<span class="sd">            **kwargs: Description</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">QIPythonWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">customBanner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">banner</span><span class="o">=</span><span class="n">customBanner</span>
+
+        <span class="c1"># create an Inprocess kernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_manager</span> <span class="o">=</span> <span class="n">QtInProcessKernelManager</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_manager</span><span class="o">.</span><span class="n">start_kernel</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_manager</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">gui</span> <span class="o">=</span> <span class="s1">&#39;qt4&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kernel_manager</span><span class="o">.</span><span class="n">client</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_client</span><span class="o">.</span><span class="n">start_channels</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_default_style</span><span class="p">(</span><span class="n">colors</span><span class="o">=</span><span class="n">colors</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">exit_requested</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+
+<div class="viewcode-block" id="QIPythonWidget.pushVariables"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.QIPythonWidget.pushVariables">[docs]</a>    <span class="k">def</span> <span class="nf">pushVariables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">variableDict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Given a dictionary containing name / value pairs,</span>
+<span class="sd">        push those variables to the IPython console widget</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            variableDict: dict of var {names: value}</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_manager</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">shell</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">variableDict</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="QIPythonWidget.clearTerminal"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.QIPythonWidget.clearTerminal">[docs]</a>    <span class="k">def</span> <span class="nf">clearTerminal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Clears the terminal &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_control</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="QIPythonWidget.printText"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.QIPythonWidget.printText">[docs]</a>    <span class="k">def</span> <span class="nf">printText</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Prints some plain text to the console.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            text (str): text to be printed</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append_plain_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="QIPythonWidget.executeCommand"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.QIPythonWidget.executeCommand">[docs]</a>    <span class="k">def</span> <span class="nf">executeCommand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">command</span><span class="p">,</span><span class="n">hidden</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute a command in the frame of the console widget</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            command (str): Command to execute</span>
+<span class="sd">            hidden (bool, optional): hid the command or not</span>
+<span class="sd">            interactive (bool, optional): Interactive Mode</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">command</span><span class="p">,</span><span class="n">hidden</span><span class="o">=</span><span class="n">hidden</span><span class="p">,</span><span class="n">interactive</span><span class="o">=</span><span class="n">interactive</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="QIPythonWidget.import_value"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.QIPythonWidget.import_value">[docs]</a>    <span class="k">def</span> <span class="nf">import_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">HDF5Object</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Import the value of a HDF5 object</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            HDF5Object (HDF5 item): Instance of a HDF5 item</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">HDF5Object</span><span class="o">.</span><span class="n">emitDict</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="QIPythonWidget.get_value"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.QIPythonWidget.get_value">[docs]</a>    <span class="nd">@pyqtSlot</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">variableDict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the dict of variables emmitted by the treeview.</span>
+<span class="sd">        Note: if the name of variable starts with _ the value is NOT</span>
+<span class="sd">        printed in the console.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            variableDict (dict): dict of variables {name: value}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># exectute a command</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">variableDict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;exec_cmd&#39;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">cmd</span> <span class="ow">in</span> <span class="n">variableDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># push a variable in the console</span>
+        <span class="c1"># print it if the name doesnt start with _</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pushVariables</span><span class="p">(</span><span class="n">variableDict</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">variableDict</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">executeCommand</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">k</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="QIPythonWidget.stop"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.QIPythonWidget.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Stop the kernel.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_client</span><span class="o">.</span><span class="n">stop_channels</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_manager</span><span class="o">.</span><span class="n">shutdown_kernel</span><span class="p">()</span>
+        <span class="n">guisupport</span><span class="o">.</span><span class="n">get_app_qt4</span><span class="p">()</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span></div></div>
+
+
+
+<div class="viewcode-block" id="DummyHDF5Group"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.DummyHDF5Group">[docs]</a><span class="k">class</span> <span class="nc">DummyHDF5Group</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">attrs</span> <span class="o">=</span><span class="p">{},</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;DummyHDF5Group&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dummy HDF5 group created sometimes ....</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dictionary (dict):</span>
+<span class="sd">            attrs (dict, optional):</span>
+<span class="sd">            name (str, optional): Name of the group</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DummyHDF5Group</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attrs</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basename</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="n">file</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="HDF5TreeItem"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeItem">[docs]</a><span class="k">class</span> <span class="nc">HDF5TreeItem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">data_file</span><span class="p">,</span><span class="n">parent</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">row</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Create a new item for an HDF5 tree</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_file ( HDF5 data file): This is the file (NB must be the top-level group) containing everything</span>
+<span class="sd">            parent (HDF5TreeItem): The parent of the current item</span>
+<span class="sd">            name (string): The name of the current item (should be parent.name plus an extra component)</span>
+<span class="sd">            row (int): The index of the current item in the parent&#39;s children.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_file</span> <span class="o">=</span> <span class="n">data_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">row</span> <span class="o">=</span> <span class="n">row</span>
+
+        <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">data_file</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">basename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="n">_has_children</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_children</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_has_children</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">],</span><span class="s2">&quot;keys&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_children</span>
+
+    <span class="n">_children</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_children</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[</span><span class="n">HDF5TreeItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">keys</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span>
+
+<div class="viewcode-block" id="HDF5TreeItem.purge_children"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeItem.purge_children">[docs]</a>    <span class="k">def</span> <span class="nf">purge_children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Empty the cached list of children.&quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+                    <span class="n">child</span><span class="o">.</span><span class="n">purge_children</span><span class="p">()</span> <span class="c1"># We must delete them all the way down!</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+                    <span class="k">del</span> <span class="n">child</span> <span class="c1"># Not sure if this is needed...</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_has_children</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> failed to purge its children&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">h5item</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The underlying HDF5 item for this tree item.&quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_file</span><span class="p">,</span> <span class="s2">&quot;Error, </span><span class="si">{}</span><span class="s2"> is no longer a valid HDF5 item&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_file</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">purge_children</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="HDF5ItemModel"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5ItemModel">[docs]</a><span class="k">class</span> <span class="nc">HDF5ItemModel</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QAbstractItemModel</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;This model takes its data from an HDF5 Group for display in a tree.</span>
+<span class="sd">    It loads the file as the tree is expanded for speed - in the future it might implement sanity checks to</span>
+<span class="sd">    abort loading very long folders.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">data_group</span><span class="p">,</span><span class="n">res</span><span class="p">,</span><span class="n">extended_selection</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Init the class</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_group (HDF5 grup): HDF5 group</span>
+<span class="sd">            res (qt resolution): size of the app</span>
+<span class="sd">            extended_selection (bool): allow multiple selection</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root_item</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_group</span> <span class="o">=</span> <span class="n">data_group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iconProvider</span> <span class="o">=</span> <span class="n">QFileIconProvider</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">res</span> <span class="o">=</span> <span class="n">res</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extended_selection</span> <span class="o">=</span> <span class="n">extended_selection</span>
+
+    <span class="n">_data_group</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">new_data_group</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_item</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_group</span> <span class="o">=</span> <span class="n">new_data_group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root_item</span> <span class="o">=</span> <span class="n">HDF5TreeItem</span><span class="p">(</span><span class="n">new_data_group</span><span class="o">.</span><span class="n">file</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="n">new_data_group</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@data_group</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">data_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_data_group</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the data group represented by the model.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_item</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_group</span> <span class="o">=</span> <span class="n">new_data_group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root_item</span> <span class="o">=</span> <span class="n">HDF5TreeItem</span><span class="p">(</span><span class="n">new_data_group</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">new_data_group</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_index_to_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">index</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;return the HDF5Item for a given index.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            index (int): index of the item</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            HDF5item: corresponding item</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">index</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">index</span><span class="o">.</span><span class="n">internalPointer</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_item</span>
+
+<div class="viewcode-block" id="HDF5ItemModel.index"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5ItemModel.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">row</span><span class="p">,</span><span class="n">column</span><span class="p">,</span><span class="n">parent_index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the index of the &lt;row&gt;th child of parent.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            row (int): row index</span>
+<span class="sd">            column (int): column index</span>
+<span class="sd">            parent_index (QtCore.QModelIndex): Parent</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_to_item</span><span class="p">(</span><span class="n">parent_index</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">createIndex</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">parent</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">row</span><span class="p">])</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="HDF5ItemModel.parent"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5ItemModel.parent">[docs]</a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find the index of the parent of the item at a given index.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_to_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">createIndex</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># Something went wrong with finding the parent so return an invalid index</span>
+            <span class="k">return</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QModelIndex</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="HDF5ItemModel.flags"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5ItemModel.flags">[docs]</a>    <span class="k">def</span> <span class="nf">flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return flags telling Qt what to do with the item&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsSelectable</span> <span class="o">|</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ItemIsEnabled</span></div>
+
+<div class="viewcode-block" id="HDF5ItemModel.data"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5ItemModel.data">[docs]</a>    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">role</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The data represented by this item.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">index</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_to_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+            <span class="c1"># If the dataset is one number we print the value in the name</span>
+            <span class="c1">#if item.parent.basename == &#39;targets&#39;:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">data_file</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{:10s}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">basename</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">value : </span><span class="si">%1.3e</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">value</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,):</span>
+                        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{:10s}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">basename</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">value : </span><span class="si">%1.3e</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">value</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">dims</span> <span class="o">=</span> <span class="s1">&#39; x &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+                        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{:10s}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">basename</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">size : &#39;</span> <span class="o">+</span> <span class="n">dims</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="c1"># for the rest just the values</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_to_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">basename</span>
+
+        <span class="k">elif</span> <span class="n">role</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">DecorationRole</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_to_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">_has_children</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iconProvider</span><span class="o">.</span><span class="n">icon</span><span class="p">(</span><span class="n">QFileIconProvider</span><span class="o">.</span><span class="n">Folder</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iconProvider</span><span class="o">.</span><span class="n">icon</span><span class="p">(</span><span class="n">QFileIconProvider</span><span class="o">.</span><span class="n">File</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="HDF5ItemModel.headerData"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5ItemModel.headerData">[docs]</a>    <span class="k">def</span> <span class="nf">headerData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">orientation</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the header names - an empty string here!&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="HDF5ItemModel.rowCount"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5ItemModel.rowCount">[docs]</a>    <span class="k">def</span> <span class="nf">rowCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The number of rows exposed by the model&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_to_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">item</span><span class="o">.</span><span class="n">has_children</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">children</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># if it doesn&#39;t have keys, assume there are no children.</span>
+            <span class="k">return</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="HDF5ItemModel.hasChildren"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5ItemModel.hasChildren">[docs]</a>    <span class="k">def</span> <span class="nf">hasChildren</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Whether or not this object has children&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_to_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">has_children</span></div>
+
+
+<div class="viewcode-block" id="HDF5ItemModel.columnCount"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5ItemModel.columnCount">[docs]</a>    <span class="k">def</span> <span class="nf">columnCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of columns&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="HDF5ItemModel.refresh_tree"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5ItemModel.refresh_tree">[docs]</a>    <span class="k">def</span> <span class="nf">refresh_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Reload the HDF5 tree, resetting the model</span>
+<span class="sd">        This causes all cached HDF5 tree information to be deleted, and any views</span>
+<span class="sd">        using this model will automatically reload.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beginResetModel</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root_item</span><span class="o">.</span><span class="n">purge_children</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endResetModel</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="HDF5ItemModel.selected_h5item_from_view"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5ItemModel.selected_h5item_from_view">[docs]</a>    <span class="k">def</span> <span class="nf">selected_h5item_from_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">treeview</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given a treeview object, return the selection, as an HDF5 object, or a work-alike for multiple selection.</span>
+<span class="sd">        If one item is selected, we will return the HDF5 group or dataset that is selected.  If multiple items are</span>
+<span class="sd">        selected, we will return a dummy HDF5 group containing all selected items.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_to_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">treeview</span><span class="o">.</span><span class="n">selectedIndexes</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">h5item</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DummyHDF5Group</span><span class="p">({</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">h5item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="HDF5ItemModel.set_up_treeview"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5ItemModel.set_up_treeview">[docs]</a>    <span class="k">def</span> <span class="nf">set_up_treeview</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">treeview</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Correctly configure a QTreeView to use this model.</span>
+<span class="sd">        This will set the HDF5ItemModel as the tree&#39;s model (data source), and in the future</span>
+<span class="sd">        may set up context menus, etc. as appropriate.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Make the tree view use this object as its model</span>
+        <span class="n">treeview</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">treeview</span><span class="o">.</span><span class="n">setAlternatingRowColors</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">treeview</span><span class="o">.</span><span class="n">setEditTriggers</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">DoubleClicked</span> <span class="o">|</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SelectedClicked</span><span class="p">)</span>
+        <span class="n">treeview</span><span class="o">.</span><span class="n">setSelectionBehavior</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">SelectItems</span><span class="p">)</span>
+
+        <span class="c1"># Set up a callback to allow us to customise the context menu</span>
+        <span class="n">treeview</span><span class="o">.</span><span class="n">setContextMenuPolicy</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">CustomContextMenu</span><span class="p">)</span>
+        <span class="n">treeview</span><span class="o">.</span><span class="n">customContextMenuRequested</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context_menu</span><span class="p">,</span> <span class="n">treeview</span><span class="p">))</span>
+
+        <span class="c1"># set the selection Mode</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">extended_selection</span><span class="p">:</span>
+            <span class="n">treeview</span><span class="o">.</span><span class="n">setSelectionMode</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAbstractItemView</span><span class="o">.</span><span class="n">ExtendedSelection</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="HDF5TreeWidget"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeWidget">[docs]</a><span class="k">class</span> <span class="nc">HDF5TreeWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTreeView</span><span class="p">):</span>
+
+
+    <span class="n">emitDict</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="sd">&quot;&quot;&quot;A TreeView for looking at an HDF5 tree&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datafile</span><span class="p">,</span><span class="n">res</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">menu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">extended_selection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a TreeView widget that views the contents of an HDF5 tree.</span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            datafile : nplab.datafile.Group</span>
+<span class="sd">            the HDF5 tree to show</span>
+<span class="sd">        Additional keyword arguments are passed to the QTreeView constructor.</span>
+<span class="sd">        You may want to include parent, for example.&quot;&quot;&quot;</span>
+        <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTreeView</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">HDF5ItemModel</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span><span class="n">res</span><span class="p">,</span><span class="n">extended_selection</span><span class="o">=</span><span class="n">extended_selection</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">context_menu</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">MethodType</span><span class="p">(</span><span class="n">menu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">set_up_treeview</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sizePolicy</span><span class="p">()</span><span class="o">.</span><span class="n">setHorizontalStretch</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mouseDoubleClickEvent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">doubleClicked</span>
+
+<div class="viewcode-block" id="HDF5TreeWidget.selected_h5item"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeWidget.selected_h5item">[docs]</a>    <span class="k">def</span> <span class="nf">selected_h5item</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the current selection as an HDF5 item.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">selected_h5item_from_view</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HDF5TreeWidget.doubleClicked"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeWidget.doubleClicked">[docs]</a>    <span class="k">def</span> <span class="nf">doubleClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">event</span><span class="p">):</span>
+
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Handle the double click on the different items</span>
+<span class="sd">        If the item has no children its name/value are emitted</span>
+<span class="sd">        and are pushed in the iPython console</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1"># get the current item</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_index_to_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectedIndexes</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span><span class="o">!=</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">item</span><span class="o">=</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># if the item has no children we push the raw data</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">_has_children</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">basename</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">emitDict</span><span class="o">.</span><span class="n">emit</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">data_file</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">})</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">emitDict</span><span class="o">.</span><span class="n">emit</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="s1">&#39;Corrupted data&#39;</span><span class="p">})</span>
+
+        <span class="c1"># or we skip</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span></div></div>
+
+<div class="viewcode-block" id="HDF5Browser"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5Browser">[docs]</a><span class="k">class</span> <span class="nc">HDF5Browser</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A Qt Widget for browsing an HDF5 file and graphing the data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_file</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">func_menu</span><span class="p">,</span><span class="n">extended_selection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">HDF5Browser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;h5Xplorer&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_file</span> <span class="o">=</span> <span class="n">data_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">res</span> <span class="o">=</span> <span class="n">res</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileIconProvider</span><span class="p">()</span>
+        <span class="n">fileinfo</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QFileInfo</span><span class="p">(</span><span class="n">data_file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">icon</span> <span class="o">=</span> <span class="n">ip</span><span class="o">.</span><span class="n">icon</span><span class="p">(</span><span class="n">QFileIconProvider</span><span class="o">.</span><span class="n">Drive</span><span class="p">)</span>
+
+        <span class="c1"># the tree widget</span>
+        <span class="k">if</span> <span class="n">func_menu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">func_menu</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">treeWidget</span> <span class="o">=</span> <span class="n">HDF5TreeWidget</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span><span class="n">res</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">res</span><span class="p">,</span><span class="n">menu</span><span class="o">=</span><span class="n">func_menu</span><span class="p">,</span>
+            <span class="n">extended_selection</span><span class="o">=</span><span class="n">extended_selection</span><span class="p">,</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selection_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">treeWidget</span><span class="o">.</span><span class="n">selectionModel</span><span class="p">()</span>
+
+        <span class="c1"># push button to load data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_tree_button</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">()</span> <span class="c1">#Create a refresh button</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_tree_button</span><span class="o">.</span><span class="n">setIcon</span><span class="p">(</span><span class="n">icon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_tree_button</span><span class="o">.</span><span class="n">setIconSize</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QSize</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span><span class="mi">24</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_tree_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">load_new_data</span><span class="p">)</span>
+
+        <span class="c1">#  widget that contains the toolbar and the treeview</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">treelayoutwidget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">treelayoutwidget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">treelayoutwidget</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">treeWidget</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">treelayoutwidget</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">load_tree_button</span><span class="p">)</span>
+
+        <span class="c1">#the Ipython console</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ipyConsole</span> <span class="o">=</span> <span class="n">QIPythonWidget</span><span class="p">()</span>
+
+        <span class="c1"># make the splitt window</span>
+        <span class="n">splitter</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QSplitter</span><span class="p">()</span>
+        <span class="n">splitter</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">treelayoutwidget</span><span class="p">)</span>       <span class="c1">#Add newly constructed widget (treeview and button) to the splitter</span>
+        <span class="n">splitter</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ipyConsole</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">splitter</span><span class="p">)</span>
+
+        <span class="c1"># make the connection between the tree and the iPython console</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ipyConsole</span><span class="o">.</span><span class="n">import_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">treeWidget</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="HDF5Browser.load_new_data"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5Browser.load_new_data">[docs]</a>    <span class="k">def</span> <span class="nf">load_new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s1">&#39;Open File&#39;</span><span class="p">,</span><span class="s1">&#39;./&#39;</span><span class="p">)</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">h5py</span><span class="o">.</span><span class="n">is_hdf5</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+                <span class="n">mol_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fname</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">mol_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_file</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">data_file</span><span class="p">[</span><span class="n">mol_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">ExternalLink</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">treeWidget</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">refresh_tree</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">errorMessageDialog</span> <span class="o">=</span> <span class="n">QMessageBox</span><span class="o">.</span><span class="n">information</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="s2">&quot;File Invalid&quot;</span><span class="p">,</span> <span class="s2">&quot;Not a HDF5 File. if you&#39;re trying a netCDF3 file convert it to netCDf4 before&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HDF5Browser.sizeHint"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5Browser.sizeHint">[docs]</a>    <span class="k">def</span> <span class="nf">sizeHint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#return QtCore.QSize(int(self.res.width()/2),int(self.res.height()))</span>
+        <span class="k">return</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSize</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">600</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HDF5Browser.attach_menu"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.HDF5Browser.attach_menu">[docs]</a>    <span class="k">def</span> <span class="nf">attach_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">menu_func</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">treeview</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">context_menu</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">MethodType</span><span class="p">(</span><span class="n">menu_func</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">treeview</span><span class="o">.</span><span class="n">model</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="h5xplorer"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.h5xplorer">[docs]</a><span class="k">class</span> <span class="nc">h5xplorer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">func_menu</span><span class="o">=</span><span class="n">default_context_menu</span><span class="p">,</span><span class="n">extended_selection</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">desktop</span><span class="p">()</span><span class="o">.</span><span class="n">screenGeometry</span><span class="p">()</span>
+        <span class="n">w</span><span class="p">,</span><span class="n">h</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">width</span><span class="p">(),</span><span class="n">res</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmp_file</span> <span class="o">=</span> <span class="s1">&#39;_tmp.hdf5&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tmp_file</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+        <span class="n">ui</span> <span class="o">=</span> <span class="n">HDF5Browser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file</span><span class="p">,</span><span class="n">res</span><span class="p">,</span><span class="n">func_menu</span><span class="p">,</span><span class="n">extended_selection</span><span class="o">=</span><span class="n">extended_selection</span><span class="p">)</span>
+
+        <span class="n">ui</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">aboutToQuit</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cleanup</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">())</span>
+
+<div class="viewcode-block" id="h5xplorer.cleanup"><a class="viewcode-back" href="../../h5xplorer.core.html#h5xplorer.h5xplorer.h5xplorer.cleanup">[docs]</a>    <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tmp_file</span><span class="p">)</span></div></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">h5xplorer</span><span class="p">(</span><span class="n">menu</span><span class="o">.</span><span class="n">context_menu</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table Of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial : The simplest app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html#tutorial-a-bit-more-advanced-then">Tutorial : A bit more advanced then</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation.html">Documentation</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">h5xplorer 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Nicolas Renaud.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.
+    </div>
+  </body>
+</html>

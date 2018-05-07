@@ -1,0 +1,54 @@
+h5xplorer package
+=================
+
+Submodules
+----------
+
+h5xplorer\.default\_menu module
+-------------------------------
+
+.. automodule:: h5xplorer.default_menu
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+h5xplorer\.h5xplorer module
+---------------------------
+
+.. automodule:: h5xplorer.h5xplorer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+h5xplorer\.menu\_plot module
+----------------------------
+
+.. automodule:: h5xplorer.menu_plot
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+h5xplorer\.menu\_tools module
+-----------------------------
+
+.. automodule:: h5xplorer.menu_tools
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+h5xplorer\.standarddialogs module
+---------------------------------
+
+.. automodule:: h5xplorer.standarddialogs
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: h5xplorer
+    :members:
+    :undoc-members:
+    :show-inheritance:

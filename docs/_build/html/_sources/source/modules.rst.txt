@@ -1,0 +1,7 @@
+h5xplorer
+=========
+
+.. toctree::
+   :maxdepth: 4
+
+   h5xplorer

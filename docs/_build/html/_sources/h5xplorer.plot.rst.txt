@@ -1,0 +1,13 @@
+Plotting routines
+==========================
+
+Some functionalities are preimplemented to plot dataset in the QT console
+
+
+API
+----------------------------
+
+.. automodule:: h5xplorer.menu_plot
+    :members:
+    :undoc-members:
+    :show-inheritance:

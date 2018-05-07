@@ -1,0 +1,324 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Get items &#8212; h5xplorer 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Plotting routines" href="h5xplorer.plot.html" />
+    <link rel="prev" title="Documentation" href="documentation.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="h5xplorer.plot.html" title="Plotting routines"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="documentation.html" title="Documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">h5xplorer 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="documentation.html" accesskey="U">Documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="get-items">
+<h1>Get items<a class="headerlink" href="#get-items" title="Permalink to this headline">¶</a></h1>
+<p>Some functionalities are preimplemented to access the items and stuff</p>
+<div class="section" id="module-h5xplorer.menu_tools">
+<span id="api"></span><h2>API<a class="headerlink" href="#module-h5xplorer.menu_tools" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="h5xplorer.menu_tools.get_current_item">
+<code class="descclassname">h5xplorer.menu_tools.</code><code class="descname">get_current_item</code><span class="sig-paren">(</span><em>self</em>, <em>treeview</em>, <em>single=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/h5xplorer/menu_tools.html#get_current_item"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#h5xplorer.menu_tools.get_current_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the item(s) that was selected</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>treeview</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeWidget" title="h5xplorer.h5xplorer.HDF5TreeWidget"><em>HDF5TreeWidget</em></a>) – the treeview</li>
+<li><strong>single</strong> (<em>bool</em><em>, </em><em>optional</em>) – if true only single item possible</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Description</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">TYPE</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5xplorer.menu_tools.get_current_hdf5_group">
+<code class="descclassname">h5xplorer.menu_tools.</code><code class="descname">get_current_hdf5_group</code><span class="sig-paren">(</span><em>self</em>, <em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/h5xplorer/menu_tools.html#get_current_hdf5_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#h5xplorer.menu_tools.get_current_hdf5_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the HDF5 group of the selected item</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeItem" title="h5xplorer.h5xplorer.HDF5TreeItem"><em>HDF5TreeItem</em></a>) – treeview item</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the corresponding group</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">HDF5 group</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5xplorer.menu_tools.get_group_data">
+<code class="descclassname">h5xplorer.menu_tools.</code><code class="descname">get_group_data</code><span class="sig-paren">(</span><em>group</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/h5xplorer/menu_tools.html#get_group_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#h5xplorer.menu_tools.get_group_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the dataset of the item</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>group</strong> (<em>HDF5 group</em>) – group of the treeview item</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">return np.array if the group has a dataset or None otherwise</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dataset or None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5xplorer.menu_tools.get_actions">
+<code class="descclassname">h5xplorer.menu_tools.</code><code class="descname">get_actions</code><span class="sig-paren">(</span><em>treeview</em>, <em>position</em>, <em>list_action</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/h5xplorer/menu_tools.html#get_actions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#h5xplorer.menu_tools.get_actions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a singlelevel context menu of action and return the selected one</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">list_operations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Print attrs&#39;</span><span class="p">,</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="s1">&#39;Plot Hist&#39;</span><span class="p">,</span> <span class="s1">&#39;Plot Map&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">action</span><span class="p">,</span><span class="n">actions</span> <span class="o">=</span> <span class="n">get_actions</span><span class="p">(</span><span class="n">treeview</span><span class="p">,</span><span class="n">position</span><span class="p">,</span><span class="n">list_operations</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="n">actions</span><span class="p">[</span><span class="s1">&#39;Print attrs&#39;</span><span class="p">]:</span>
+<span class="go">        send_dict_to_console(self,item,treeview)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>treeview</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeWidget" title="h5xplorer.h5xplorer.HDF5TreeWidget"><em>HDF5TreeWidget</em></a>) – the treeview</li>
+<li><strong>position</strong> (<em>TYPE</em>) – Description</li>
+<li><strong>list_action</strong> (<em>list</em>) – List of string giving the action names</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict of QTMenu actions
+actions: the selected action</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">actions</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5xplorer.menu_tools.get_multilevel_actions">
+<code class="descclassname">h5xplorer.menu_tools.</code><code class="descname">get_multilevel_actions</code><span class="sig-paren">(</span><em>treeview</em>, <em>position</em>, <em>list_action</em>, <em>sub_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/h5xplorer/menu_tools.html#get_multilevel_actions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#h5xplorer.menu_tools.get_multilevel_actions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a multilevel context menu of action and return the selected one</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">list_operations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Hit Rate&#39;</span><span class="p">,</span><span class="s1">&#39;Av. Prec.&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">list_subop</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;Train&#39;</span><span class="p">,</span><span class="s1">&#39;Valid&#39;</span><span class="p">,</span><span class="s1">&#39;Test&#39;</span><span class="p">],[</span><span class="s1">&#39;Train&#39;</span><span class="p">,</span><span class="s1">&#39;Valid&#39;</span><span class="p">,</span><span class="s1">&#39;Test&#39;</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">action</span><span class="p">,</span><span class="n">actions</span> <span class="o">=</span> <span class="n">get_multilevel_actions</span><span class="p">(</span><span class="n">treeview</span><span class="p">,</span><span class="n">position</span><span class="p">,</span><span class="n">list_operations</span><span class="p">,</span><span class="n">list_subop</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>treeview</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeWidget" title="h5xplorer.h5xplorer.HDF5TreeWidget"><em>HDF5TreeWidget</em></a>) – the treeview</li>
+<li><strong>position</strong> (<em>TYPE</em>) – Description</li>
+<li><strong>list_action</strong> (<em>list</em>) – List of string giving the action names</li>
+<li><strong>sub_list</strong> (<em>list</em>) – list of string giving the subactions</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict of QTMenu actions
+actions: the selected action</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">actions</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5xplorer.menu_tools.send_dict_to_console">
+<code class="descclassname">h5xplorer.menu_tools.</code><code class="descname">send_dict_to_console</code><span class="sig-paren">(</span><em>self</em>, <em>item</em>, <em>treeview</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/h5xplorer/menu_tools.html#send_dict_to_console"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#h5xplorer.menu_tools.send_dict_to_console" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a dictionany to the QT console</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>item</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeItem" title="h5xplorer.h5xplorer.HDF5TreeItem"><em>HDF5TreeItem</em></a>) – treeview item</li>
+<li><strong>treeview</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeWidget" title="h5xplorer.h5xplorer.HDF5TreeWidget"><em>HDF5TreeWidget</em></a>) – the treeview</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5xplorer.menu_tools.print_attributes">
+<code class="descclassname">h5xplorer.menu_tools.</code><code class="descname">print_attributes</code><span class="sig-paren">(</span><em>self</em>, <em>item</em>, <em>treeview</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/h5xplorer/menu_tools.html#print_attributes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#h5xplorer.menu_tools.print_attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the attribute in the console</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>item</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeItem" title="h5xplorer.h5xplorer.HDF5TreeItem"><em>HDF5TreeItem</em></a>) – treeview item</li>
+<li><strong>treeview</strong> (<a class="reference internal" href="h5xplorer.core.html#h5xplorer.h5xplorer.HDF5TreeWidget" title="h5xplorer.h5xplorer.HDF5TreeWidget"><em>HDF5TreeWidget</em></a>) – the treeview</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5xplorer.menu_tools.get_user_values">
+<code class="descclassname">h5xplorer.menu_tools.</code><code class="descname">get_user_values</code><span class="sig-paren">(</span><em>varnames</em>, <em>windowtitle='Enter Values'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/h5xplorer/menu_tools.html#get_user_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#h5xplorer.menu_tools.get_user_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the values of variables from the users</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>varnames</strong> (<em>list</em>) – list of strings of all the desired variables</li>
+<li><strong>windowtitle</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the window</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of float of the desired variables</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table Of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial : The simplest app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html#tutorial-a-bit-more-advanced-then">Tutorial : A bit more advanced then</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Get items</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-h5xplorer.menu_tools">API</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="h5xplorer.plot.html">Plotting routines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5xplorer.core.html">Core design of the app</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="documentation.html"
+                        title="previous chapter">Documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="h5xplorer.plot.html"
+                        title="next chapter">Plotting routines</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/h5xplorer.tools.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="h5xplorer.plot.html" title="Plotting routines"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="documentation.html" title="Documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">h5xplorer 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="documentation.html" >Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Nicolas Renaud.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.
+    </div>
+  </body>
+</html>
