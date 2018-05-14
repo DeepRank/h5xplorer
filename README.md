@@ -1,6 +1,10 @@
 # h5xplorer
 
-Framework for the creation of HDF5 browsers dedicated to the specific needs of each data structure.
+
+[![Documentation Status](https://readthedocs.org/projects/h5xplorer/badge/?version=latest)](http://h5xplorer.readthedocs.io/?badge=latest)
+
+
+**Customizable Framework for the Creation of HDF5 Browsers**
 
 ## Instalation
 
