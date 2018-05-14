@@ -1,0 +1,15 @@
+Byte-compiled / optimized
+*__pycache__*
+
+# datafile
+*.h5
+*.hdf5
+*.nc4
+*.nc
+*Cabauw
+*primavera
+
+# docs
+#docs/_build
+#docs/_static
+#docs/_templates
