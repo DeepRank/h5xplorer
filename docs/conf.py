@@ -27,7 +27,11 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
             return MagicMock()
 
-MOCK_MODULES = ['numpy', 'h5py', 'pyqt5','qtconsole','IPython']
+MOCK_MODULES = ['numpy', 'h5py',
+                'PyQt5','PyQt5.QtCore','PyQt5.QtWidgets','PyQt5.QtGui',
+                'qtconsole', 'qtconsole.rich_ipython_widget','qtconsole.inprocess',
+                'IPython', 'IPython.lib',
+                'functools']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 sys.path.insert(0, os.path.abspath('../'))
 
