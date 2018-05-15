@@ -8,7 +8,5 @@
 
 ![alt-text](./h5x.gif)
 
-For more information check out the documentation at
-
-http://h5xplorer.readthedocs.io/en/latest/index.html
+For more information check out the documentation at: http://h5xplorer.readthedocs.io/en/latest/index.html
 
