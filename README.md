@@ -16,7 +16,7 @@ pip install ./
 ## Example
 
 
-![alt-text](./h5x.png)
+![alt-text](./h5x.gif)
 
 For example the main file can look like that
 
