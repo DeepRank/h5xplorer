@@ -3,4 +3,4 @@
 from h5xplorer.h5xplorer import h5xplorer
 import menu
 
-app = h5xplorer(menu.context_menu,extended_selection=True)
+app = h5xplorer(menu.context_menu,baseimport='baseimport.py',extended_selection=True)

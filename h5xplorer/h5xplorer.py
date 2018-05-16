@@ -24,7 +24,7 @@ from .default_menu import default_context_menu
 
 class QIPythonWidget(RichJupyterWidget):
 
-    def __init__(self,customBanner=None,colors='lightbg',*args,**kwargs):
+    def __init__(self,customBanner=None,colors='lightbg',baseimport=None,*args,**kwargs):
         """Convenience class for a live IPython console widget.
         Adapted from the pyQT example
 
@@ -52,7 +52,19 @@ class QIPythonWidget(RichJupyterWidget):
         self.kernel_client = self._kernel_manager.client()
         self.kernel_client.start_channels()
 
+        # set the colorscheme
         self.set_default_style(colors=colors)
+
+        # exectute the base import
+        if baseimport is not None:
+            if os.path.isfile(baseimport):
+                with open(baseimport,'r') as f:
+                    cmd = f.readlines()
+                cmd = ''.join(cmd)
+                try:
+                    self._execute(cmd,False)
+                except:
+                    self.printText('Import of %s failed' %baseimport)
 
         self.exit_requested.connect(self.stop)
 
@@ -455,7 +467,7 @@ class HDF5Browser(QtWidgets.QWidget):
     """A Qt Widget for browsing an HDF5 file and graphing the data.
     """
 
-    def __init__(self, data_file, res, func_menu,extended_selection=False, parent=None):
+    def __init__(self, data_file, res, func_menu, baseimport=None, extended_selection=False, parent=None):
 
         super(HDF5Browser, self).__init__(parent)
 
@@ -486,7 +498,7 @@ class HDF5Browser(QtWidgets.QWidget):
         self.treelayoutwidget.layout().addWidget(self.load_tree_button)
 
         #the Ipython console
-        self.ipyConsole = QIPythonWidget()
+        self.ipyConsole = QIPythonWidget(baseimport=baseimport)
 
         # make the splitt window
         splitter = QtWidgets.QSplitter()
@@ -522,16 +534,19 @@ class HDF5Browser(QtWidgets.QWidget):
 
 class h5xplorer(object):
 
-    def __init__(self,func_menu=default_context_menu,extended_selection=False):
+    def __init__(self,func_menu=default_context_menu,baseimport=None,extended_selection=False):
 
         app = QApplication(sys.argv)
         res = app.desktop().screenGeometry()
         w,h = res.width(),res.height()
 
-        self.tmp_file = '_tmp.hdf5'
+        self.tmp_file = '.tmp.hdf5'
         self.data_file = h5py.File(self.tmp_file,'w')
 
-        ui = HDF5Browser(self.data_file,res,func_menu,extended_selection=extended_selection)
+        ui = HDF5Browser(self.data_file,res,
+                         func_menu,
+                         baseimport=baseimport,
+                         extended_selection=extended_selection)
 
         ui.show()
         app.aboutToQuit.connect(self.cleanup)
