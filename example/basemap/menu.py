@@ -52,9 +52,6 @@ def context_menu(self, treeview, position):
                 data_dict = {'_mean':mean,'_wave':wave}
                 treeview.emitDict.emit(data_dict)
 
-                # with open('baseplot.py','r') as f:
-                #     cmd = f.readlines()
-                # cmd = ''.join(cmd)
                 cmd = 'basemap(_wave,_mean)'
                 data_dict = {'exec_cmd':cmd}
                 treeview.emitDict.emit(data_dict)

@@ -1,193 +1,118 @@
-import viztools
 from PyQt5 import QtWidgets
-from deeprank.tools import pdb2sql, sparse
+from h5xplorer.menu_tools import *
+from h5xplorer.menu_plot import *
+import numpy as np
 
 def context_menu(self, treeview, position):
 
     """Generate a right-click menu for the items"""
 
-    # make sure tha there is only one item selected
-    items = [self._index_to_item(index) for index in treeview.selectedIndexes()]
+    item = get_current_item(self,treeview,single=True)
 
-    if len(items)!=1:
-        return
-    item = items[0]
+    data = get_group_data(get_current_hdf5_group(self,item))
 
-    try:
+    if data is None:
+        list_operations = ['Print attrs','-','Eigenvalue','Coupling']
 
-        _type = self.root_item.data_file[item.name].attrs['type']
+    elif data.ndim == 1:
+        list_operations = ['Print attrs','-','Plot Hist', 'Plot Line']
 
+    elif data.ndim == 2:
+        list_operations = ['Print attrs','-','Plot Hist', 'Plot Map']
 
-        if _type == 'molecule':
-            molgrp = self.root_item.data_file[item.name]
-            _context_mol(item,treeview,position,molgrp)
+    else:
+        list_operations = ['Print attrs']
 
-        if _type == 'sparse_matrix':
-            _context_sparse(item,treeview,position)
+    action,actions = get_actions(treeview,position,list_operations)
 
-        if _type == 'epoch':
-            _context_epoch(item,treeview,position)
+    if action == actions['Print attrs']:
+        send_dict_to_console(self,item,treeview)
 
-        if _type == 'losses':
-            _context_losses(item,treeview,position)
+    if 'Plot Hist' in actions:
+        if action == actions['Plot Hist']:
+            plot_histogram(self,item,treeview)
 
-    except Exception as inst:
-        print(type(inst))
-        print(inst)
-        return
+    if 'Plot Line' in actions:
+        if action == actions['Plot Line']:
+            plot_line(self,item,treeview)
 
-def _context_mol(item,treeview,position,molgrp):
+    if 'Plot Map' in actions:
+        if action == actions['Plot Map']:
+            plot2d(self,item,treeview)
 
-    menu = QtWidgets.QMenu()
-    actions = {}
-    list_operations = ['Load in PyMol','Load in VMD','PDB2SQL']
+    if 'Eigenvalue' in actions:
+        if action == actions['Eigenvalue']:
+            plot_eigen(self,item,treeview)
 
-    for operation in list_operations:
-        actions[operation] = menu.addAction(operation)
-    action = menu.exec_(treeview.viewport().mapToGlobal(position))
+    if 'Coupling' in actions:
+        if action == actions['Coupling']:
+            plot_coupling(self,item,treeview)
 
-    if action == actions['Load in VMD']:
-        _,cplx_name,mol_name = item.name.split('/')
-        viztools.create3Ddata(mol_name,molgrp)
-        viztools.launchVMD(mol_name)
+def plot_eigen(self,item,treeview):
 
-    if action == actions['Load in PyMol']:
-        _,cplx_name,mol_name = item.name.split('/')
-        viztools.create3Ddata(mol_name,molgrp)
-        viztools.launchPyMol(mol_name)
+    indexes = get_user_values(['indexes'],vartypes='str',windowtitle='Enter indexes')[0]
+    indexes = indexes.split(',')
 
-    if action == actions['PDB2SQL']:
-        _,cplx_name,mol_name = item.name.split('/')
-        db = pdb2sql(molgrp['complex'].value)
-        treeview.emitDict.emit({'sql_' + item.basename: db})
-
-def _context_sparse(item,treeview,position):
-
-    menu = QtWidgets.QMenu()
-    actions = {}
-    list_operations = ['Load Matrix','Plot Histogram']
-
-    for operation in list_operations:
-        actions[operation] = menu.addAction(operation)
-    action = menu.exec_(treeview.viewport().mapToGlobal(position))
-    name = item.basename + '_' + item.name.split('/')[2]
-
-    if action == actions['Load Matrix']:
-
-        subgrp = item.data_file[item.name]
-        data_dict = {}
-        if not subgrp.attrs['sparse']:
-            data_dict[item.name] =  subgrp['value'].value
+    ind_values = []
+    for ind in indexes:
+        if '-' in ind:
+            ind_values += list(range(int(ind.split('-')[0]),int(ind.split('-')[-1])+1))
+        elif ind == 'all':
+            ind_values += [ind]
         else:
-            molgrp = item.data_file[item.parent.parent.parent.name]
-            grid = {}
-            lx = len(molgrp['grid_points/x'].value)
-            ly = len(molgrp['grid_points/y'].value)
-            lz = len(molgrp['grid_points/z'].value)
-            shape = (lx,ly,lz)
-            spg = sparse.FLANgrid(sparse=True,index=subgrp['index'].value,value=subgrp['value'].value,shape=shape)
-            data_dict[name] =  spg.to_dense()
-        treeview.emitDict.emit(data_dict)
+            ind_values += int(ind)
 
-    if action == actions['Plot Histogram']:
+    grp = get_current_hdf5_group(self,item)
+    point_groups = list(filter(lambda x: 'point_' in x,list(grp.keys())))
+    selected_values = []
+    for subgroup in point_groups:
+        values = grp[subgroup + '/cp2k/mo/eigenvalues'].value
+        if ind_values == ['all']:
+            selected_values.append(values)
+        else:
+            selected_values.append(values[ind_values])
+    selected_values = np.array(selected_values)
 
-        value = item.data_file[item.name]['value'].value
-        data_dict = {'value':value}
-        treeview.emitDict.emit(data_dict)
+    data_dict = {'_data':selected_values}
+    treeview.emitDict.emit(data_dict)
 
-        cmd = "%matplotlib inline\nimport matplotlib.pyplot as plt\nplt.hist(value,25)\nplt.show()\n"            
-        data_dict = {'exec_cmd':cmd}
-        treeview.emitDict.emit(data_dict)
+    data_dict = {'exec_cmd':'plot_time_series(_data)'}
+    treeview.emitDict.emit(data_dict)
 
-def _context_epoch(item,treeview,position):
+def plot_coupling(self,item,treeview):
 
-    menu = QtWidgets.QMenu()
-    actions = {}
-    list_operations = ['Scatter Plot']
+    indexes = get_user_values(['index1','index2'],vartypes='str',windowtitle='Enter indexes')
 
-    for operation in list_operations:
-        actions[operation] = menu.addAction(operation)
-    action = menu.exec_(treeview.viewport().mapToGlobal(position))
+    both_ind_val = []
+    for index in indexes:
+        index = index.split()
+        ind_values = []
+        for ind in index:
+            if '-' in ind:
+                ind_values += list(range(int(ind.split('-')[0]),int(ind.split('-')[-1])+1))
+            elif ind == 'all':
+                ind_values += [ind]
+            else:
+                ind_values += [int(ind)]
+        both_ind_val.append(ind_values)
 
-    if action == actions['Scatter Plot']:
+    grp = get_current_hdf5_group(self,item)
+    point_groups = list(filter(lambda x: 'coupling_' in x,list(grp.keys())))
+    selected_values = []
+    for subgroup in point_groups:
 
+        values = grp[subgroup].value
+        norb = values.shape[0]
 
-        values = []
-        train_out = item.data_file[item.name+'/train/outputs'].value
-        train_tar = item.data_file[item.name+'/train/targets'].value
-        values.append([x for x in train_out])
-        values.append([x for x in train_tar])
+        for i in range(2):
+            if both_ind_val[i] == ['all']:
+                both_ind_val[i] = list(range(norb))
 
+        selected_values.append(values[np.ix_(both_ind_val[0],both_ind_val[1])].flatten())
+    selected_values = np.array(selected_values)
 
-        valid_out = item.data_file[item.name+'/valid/outputs'].value
-        valid_tar = item.data_file[item.name+'/valid/targets'].value
-        values.append([x for x in valid_tar])
-        values.append([x for x in valid_out])
+    data_dict = {'_data':selected_values}
+    treeview.emitDict.emit(data_dict)
 
-
-        test_out = item.data_file[item.name+'/test/outputs'].value
-        test_tar = item.data_file[item.name+'/test/targets'].value
-        values.append([x for x in test_tar])
-        values.append([x for x in test_out])
-
-        vmin = np.array([x for a in values for x in a]).min()
-        vmax = np.array([x for a in values for x in a]).max()
-        delta = vmax-vmin
-        values.append([vmax + 0.1*delta])
-        values.append([vmin - 0.1*delta])
-
-        data_dict = {'_values':values}
-        treeview.emitDict.emit(data_dict)
-
-        data_dict = {}
-        cmd  = "%matplotlib inline\nimport matplotlib.pyplot as plt\n"
-        cmd += "fig,ax = plt.subplots()\n"
-        cmd += "ax.scatter(_values[0],_values[1],c='red',label='train')\n"
-        cmd += "ax.scatter(_values[2],_values[3],c='blue',label='valid')\n"
-        cmd += "ax.scatter(_values[4],_values[5],c='green',label='test')\n"
-        cmd += "legen = ax.legend(loc='upper left')\n"
-        cmd += "ax.set_xlabel('Targets')\n"
-        cmd += "ax.set_ylabel('Predictions')\n"
-        cmd += "ax.plot([_values[-2],_values[-1]],[_values[-2],_values[-1]])\n"
-        cmd += "plt.show()\n" 
-        data_dict['exec_cmd'] = cmd
-        treeview.emitDict.emit(data_dict)
-
-def _context_losses(item,treeview,position):
-
-    menu = QtWidgets.QMenu()
-    actions = {}
-    list_operations = ['Plot Losses']
-
-    for operation in list_operations:
-        actions[operation] = menu.addAction(operation)
-    action = menu.exec_(treeview.viewport().mapToGlobal(position))
-
-    if action == actions['Plot Losses']:
-
-
-        values = []
-        test = item.data_file[item.name+'/test'].value
-        train = item.data_file[item.name+'/train'].value
-        valid = item.data_file[item.name+'/valid'].value
-        values.append([x for x in train])
-        values.append([x for x in valid])
-        values.append([x for x in test])
-
-        data_dict = {'_values':values}
-        treeview.emitDict.emit(data_dict)
-
-        data_dict = {}
-        cmd  = "%matplotlib inline\nimport matplotlib.pyplot as plt\n"
-        cmd += "fig,ax = plt.subplots()\n"
-        cmd += "plt.plot(_values[0],c='red',label='train')\n"
-        cmd += "plt.plot(_values[1],c='blue',label='valid')\n"
-        cmd += "plt.plot(_values[2],c='green',label='test')\n"
-        cmd += "legen = ax.legend(loc='upper right')\n"
-        cmd += "ax.set_xlabel('Epoch')\n"
-        cmd += "ax.set_ylabel('Losses')\n"
-        cmd += "plt.show()\n"
-        data_dict['exec_cmd'] = cmd
-        treeview.emitDict.emit(data_dict)
-
-
+    data_dict = {'exec_cmd':'plot_time_series(_data)'}
+    treeview.emitDict.emit(data_dict)

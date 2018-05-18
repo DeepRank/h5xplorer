@@ -24,12 +24,17 @@ class Dialog(QDialog):
         varnames (list): Name of the variable we want to  input
     """
 
-    def __init__(self, varnames, window_name = 'Enter Values', parent=None):
+    def __init__(self, varnames, vartypes = 'float', window_name = 'Enter Values', parent=None):
         super(Dialog, self).__init__(parent)
 
         frameStyle = QFrame.Sunken | QFrame.Panel
 
         self.varnames = varnames
+        self.vartypes = vartypes
+        if not isinstance(self.vartypes,list):
+            self.vartypes = [vartypes]*len(self.varnames)
+
+
         self.Label,self.Button,self.values = {},{},{}
 
         for name in varnames:
@@ -40,8 +45,8 @@ class Dialog(QDialog):
         self.closeButton = QPushButton("OK")
 
 
-        for name in varnames:
-            self.Button[name].clicked.connect(partial(self.setValue, name))
+        for name,vtype in zip(self.varnames,self.vartypes):
+            self.Button[name].clicked.connect(partial(self.setValue, name,vtype))
         self.closeButton.clicked.connect(self.close)
 
         self.native = QCheckBox()
@@ -63,17 +68,33 @@ class Dialog(QDialog):
         self.setWindowTitle(window_name)
 
 
-    def setValue(self,name):
+    def setValue(self,name,vtype):
         """Set the value of the variable
 
         Args:
             name (str): variable name
+            type (str): variable type
         """
-        d, ok = QInputDialog.getDouble(self, "QInputDialog.getDouble()",
-                "Amount:", 37.56, -10000, 10000, 2)
-        if ok:
-            self.Label[name].setText("$%g" % d)
-            self.values[name] = d
+        if vtype == 'float':
+            d, ok = QInputDialog.getDouble(self, "Get Double",
+                    "Value:", 37.56, -10000, 10000, 2)
+            if ok:
+                self.Label[name].setText("$%g" % d)
+                self.values[name] = d
+
+        elif vtype == 'str':
+            text, ok = QInputDialog.getText(self, "Get String",
+                    "Value:", QLineEdit.Normal, '')
+            if ok and text != '':
+                self.Label[name].setText(text)
+                self.values[name] = text
+
+        elif vtype == 'int':
+            i, ok = QInputDialog.getInt(self, "Get Integer",
+                    "Value:", 25, 0, 100, 1)
+            if ok:
+                self.Label[name].setText("%d%%" % i)
+                self.values[name] = i
 
     def returnValues(self):
         """Return the values of all the variables

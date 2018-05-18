@@ -135,7 +135,7 @@ def print_attributes(self,item,treeview):
         data[a] = 0
     treeview.emitDict.emit(data)
 
-def get_user_values(varnames,windowtitle='Enter Values'):
+def get_user_values(varnames,vartypes='float',windowtitle='Enter Values'):
     """Get the values of variables from the users
 
     Args:
@@ -145,6 +145,6 @@ def get_user_values(varnames,windowtitle='Enter Values'):
     Returns:
         list: list of float of the desired variables
     """
-    dialog = Dialog(varnames)
+    dialog = Dialog(varnames,vartypes=vartypes)
     dialog.exec_()
     return dialog.returnValues()
