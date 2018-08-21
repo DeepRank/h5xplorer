@@ -5,7 +5,7 @@
 ##          https://stackoverflow.com/questions/11513132/embedding-ipython-qt-console-in-a-pyqt-application
 ##########################################################################################
 
-import os,sys
+import os,sys, warnings
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QAbstractItemModel, QFile, QIODevice, QModelIndex, Qt, QItemSelectionModel
 from PyQt5.QtCore import pyqtSignal,pyqtSlot
@@ -542,6 +542,10 @@ class h5xplorer(object):
 
         self.tmp_file = '.tmp.hdf5'
         self.data_file = h5py.File(self.tmp_file,'w')
+
+        if baseimport is not None:
+            if not os.path.isfile(baseimport):
+                warnings.warn('Baseimport %s not found' %baseimport,Warning)
 
         ui = HDF5Browser(self.data_file,res,
                          func_menu,
