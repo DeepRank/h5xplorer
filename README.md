@@ -1,6 +1,5 @@
 # h5xplorer
-
-
+[![DOI](https://zenodo.org/badge/127908769.svg)](https://zenodo.org/badge/latestdoi/127908769)
 [![Documentation Status](https://readthedocs.org/projects/h5xplorer/badge/?version=latest)](http://h5xplorer.readthedocs.io/?badge=latest)
 
 
