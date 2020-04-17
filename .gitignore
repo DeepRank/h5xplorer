@@ -13,3 +13,6 @@ Byte-compiled / optimized
 docs/_build
 docs/_static
 docs/_templates
+
+# eggs
+h5xplorer.egg-info/
