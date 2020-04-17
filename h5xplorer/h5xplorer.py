@@ -329,7 +329,7 @@ class HDF5ItemModel(QtCore.QAbstractItemModel):
             # If the dataset is one number we print the value in the name
             # if item.parent.basename == 'targets':
             try:
-                value = item.data_file[item.name].value
+                value = item.data_file[item.name][()]
                 if not isinstance(value, np.ndarray):
                     return "{:10s}".format(item.basename) + '\tvalue : %1.3e' % value
 
@@ -466,9 +466,14 @@ class HDF5TreeWidget(QtWidgets.QTreeView):
         # if the item has no children we push the raw data
         if not item._has_children:
             try:
-                name = item.basename + '_' + item.name.split('/')[2]
+                # + '_' + item.name.split('/')[2]
+                name = item.basename
+                omit_char = '!@#$%^&*()[]{};:,./<>?\|`~-=_+'
+                for c in omit_char:
+                    name = name.replace(c, '_')
+
                 self.emitDict.emit(
-                    {name: item.data_file[item.name].value})
+                    {name: item.data_file[item.name][()]})
             except:
                 self.emitDict.emit({name: 'Corrupted data'})
 
