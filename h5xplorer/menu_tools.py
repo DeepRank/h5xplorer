@@ -1,7 +1,8 @@
 from PyQt5 import QtWidgets
 from h5xplorer.standarddialogs import *
 
-def get_current_item(self,treeview,single=False):
+
+def get_current_item(self, treeview, single=False):
     """Get the item(s) that was selected
 
     Args:
@@ -11,15 +12,17 @@ def get_current_item(self,treeview,single=False):
     Returns:
         TYPE: Description
     """
-    items = [self._index_to_item(index) for index in treeview.selectedIndexes()]
+    items = [self._index_to_item(index)
+             for index in treeview.selectedIndexes()]
 
     if single:
-        if len(items)!=1:
+        if len(items) != 1:
             return
         items = items[0]
     return items
 
-def get_current_hdf5_group(self,item):
+
+def get_current_hdf5_group(self, item):
     """Get the HDF5 group of the selected item
 
     Args:
@@ -29,6 +32,7 @@ def get_current_hdf5_group(self,item):
         HDF5 group: the corresponding group
     """
     return self.root_item.data_file[item.name]
+
 
 def get_group_data(group):
     """Get the dataset of the item
@@ -40,11 +44,12 @@ def get_group_data(group):
         dataset or None: return np.array if the group has a dataset or None otherwise
     """
     try:
-        return group.value
+        return group[()]
     except Exception as ex:
         return None
 
-def get_actions(treeview,position,list_action):
+
+def get_actions(treeview, position, list_action):
     """Generate a singlelevel context menu of action and return the selected one
 
     Example:
@@ -71,10 +76,12 @@ def get_actions(treeview,position,list_action):
             menu.addSeparator()
         else:
             actions[operation] = menu.addAction(operation)
-    selected_action = menu.exec_(treeview.viewport().mapToGlobal(position))
-    return selected_action,actions
+    selected_action = menu.exec_(
+        treeview.viewport().mapToGlobal(position))
+    return selected_action, actions
 
-def get_multilevel_actions(treeview,position,list_action,sub_list):
+
+def get_multilevel_actions(treeview, position, list_action, sub_list):
     """Generate a multilevel context menu of action and return the selected one
 
     Example:
@@ -96,36 +103,40 @@ def get_multilevel_actions(treeview,position,list_action,sub_list):
     menu = QtWidgets.QMenu()
     actions = {}
 
-    for iop,operation in enumerate(list_action):
+    for iop, operation in enumerate(list_action):
         if len(sub_list[iop]) == 0:
             actions[operation] = menu.addAction(operation)
         else:
             sub_menu = menu.addMenu(operation)
             for subop in sub_list[iop]:
-                actions[(operation,subop)] = sub_menu.addAction(subop)
+                actions[(operation, subop)
+                        ] = sub_menu.addAction(subop)
 
-    selected_action = menu.exec_(treeview.viewport().mapToGlobal(position))
-    return selected_action,actions
+    selected_action = menu.exec_(
+        treeview.viewport().mapToGlobal(position))
+    return selected_action, actions
 
-def send_dict_to_console(self,item,treeview):
+
+def send_dict_to_console(self, item, treeview):
     """Send a dictionany to the QT console
 
     Args:
         item (HDF5TreeItem): treeview item
         treeview (HDF5TreeWidget): the treeview
     """
-    grp = get_current_hdf5_group(self,item)
-    data = {'attrs':list(grp.attrs)}
+    grp = get_current_hdf5_group(self, item)
+    data = {'attrs': list(grp.attrs)}
     treeview.emitDict.emit(data)
 
-def print_attributes(self,item,treeview):
+
+def print_attributes(self, item, treeview):
     """Print the attribute in the console
 
     Args:
         item (HDF5TreeItem): treeview item
         treeview (HDF5TreeWidget): the treeview
     """
-    grp = get_current_hdf5_group(self,item)
+    grp = get_current_hdf5_group(self, item)
     attrs = list(grp.attrs)
     val = list(grp.attrs.values())
     print(attrs)
@@ -135,7 +146,8 @@ def print_attributes(self,item,treeview):
         data[a] = 0
     treeview.emitDict.emit(data)
 
-def get_user_values(varnames,vartypes='float',windowtitle='Enter Values'):
+
+def get_user_values(varnames, vartypes='float', windowtitle='Enter Values'):
     """Get the values of variables from the users
 
     Args:
@@ -145,6 +157,6 @@ def get_user_values(varnames,vartypes='float',windowtitle='Enter Values'):
     Returns:
         list: list of float of the desired variables
     """
-    dialog = Dialog(varnames,vartypes=vartypes)
+    dialog = Dialog(varnames, vartypes=vartypes)
     dialog.exec_()
     return dialog.returnValues()

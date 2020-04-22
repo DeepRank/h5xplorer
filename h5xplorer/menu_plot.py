@@ -3,7 +3,7 @@ from h5xplorer.standarddialogs import *
 from h5xplorer.menu_tools import *
 
 
-def plot_histogram(self,item,treeview,nbins=10):
+def plot_histogram(self, item, treeview, nbins=10):
     """Plot an histogram of the data
 
     Example:
@@ -22,21 +22,22 @@ def plot_histogram(self,item,treeview,nbins=10):
         nbins (int, optional): number of bins in the histogram
     """
 
-    grp = get_current_hdf5_group(self,item)
+    grp = get_current_hdf5_group(self, item)
     value = get_group_data(grp)
 
     value = value.flatten()
 
     if value is not None:
-        data_dict = {'_value':value}
+        data_dict = {'_value': value}
         treeview.emitDict.emit(data_dict)
 
-        cmd = "%matplotlib inline\n"
-        cmd += "import matplotlib.pyplot as plt\nplt.hist(_value,%s)\nplt.show()\n" %nbins
-        data_dict = {'exec_cmd':cmd}
+        # cmd = "%matplotlib inline\n"
+        cmd = "import matplotlib.pyplot as plt\nplt.hist(_value,%s)\nplt.show()\n" % nbins
+        data_dict = {'exec_cmd': cmd}
         treeview.emitDict.emit(data_dict)
 
-def plot_line(self,item,treeview):
+
+def plot_line(self, item, treeview):
     """Plot a line plot of a single item VS its index
 
     Example:
@@ -54,19 +55,20 @@ def plot_line(self,item,treeview):
         treeview (HDF5TreeWidget): treeview
     """
 
-    grp = get_current_hdf5_group(self,item)
+    grp = get_current_hdf5_group(self, item)
     value = get_group_data(grp)
 
     if value is not None:
-        data_dict = {'_value':value}
+        data_dict = {'_value': value}
         treeview.emitDict.emit(data_dict)
 
-        cmd = "%matplotlib inline\nimport matplotlib.pyplot as plt\nplt.plot(_value)\nplt.show()\n"
-        data_dict = {'exec_cmd':cmd}
+        # cmd = "%matplotlib inline"
+        cmd = "import matplotlib.pyplot as plt\nplt.plot(_value)\nplt.show()\n"
+        data_dict = {'exec_cmd': cmd}
         treeview.emitDict.emit(data_dict)
 
 
-def plot1D(self,item0,item1,treeview,plot='line'):
+def plot1D(self, item0, item1, treeview, plot='line'):
     """Plot a XY line or scatter plot of two items
 
     Note: You must be able to select multiple items to use this method.
@@ -92,8 +94,8 @@ def plot1D(self,item0,item1,treeview,plot='line'):
         plot (str, optional): 'line' or 'scatter'
     """
 
-    grp0 = get_current_hdf5_group(self,item0)
-    grp1 = get_current_hdf5_group(self,item1)
+    grp0 = get_current_hdf5_group(self, item0)
+    grp1 = get_current_hdf5_group(self, item1)
 
     x = get_group_data(grp0)
     y = get_group_data(grp1)
@@ -101,15 +103,16 @@ def plot1D(self,item0,item1,treeview,plot='line'):
     xlabel = item0.basename
     ylabel = item1.basename
 
-    if x.ndim != 1 or y.ndim != 1 or x.shape!=y.shape:
+    if x.ndim != 1 or y.ndim != 1 or x.shape != y.shape:
         #show_error_message('Size Incompatible')
         return
 
-    data_dict = {'_x':x,'_y':y}
+    data_dict = {'_x': x, '_y': y}
     treeview.emitDict.emit(data_dict)
 
     data_dict = {}
-    cmd  = "%matplotlib inline\nimport matplotlib.pyplot as plt\n"
+    # cmd = "%matplotlib inline"
+    cmd = "import matplotlib.pyplot as plt\n"
     cmd += "fig,ax = plt.subplots()\n"
 
     if plot == 'scatter':
@@ -117,13 +120,14 @@ def plot1D(self,item0,item1,treeview,plot='line'):
     elif plot == 'line':
         cmd += "ax.plot(_x,_y)\n"
 
-    cmd += "ax.set_xlabel('%s')\n" %xlabel
-    cmd += "ax.set_ylabel('%s')\n" %ylabel
+    cmd += "ax.set_xlabel('%s')\n" % xlabel
+    cmd += "ax.set_ylabel('%s')\n" % ylabel
     cmd += "plt.show()\n"
     data_dict['exec_cmd'] = cmd
     treeview.emitDict.emit(data_dict)
 
-def plot2d(self,item,treeview):
+
+def plot2d(self, item, treeview):
     """Plot a map of a 2D data array
 
     Example:
@@ -140,19 +144,18 @@ def plot2d(self,item,treeview):
         item (HDF5TreeItem): treeview item
         treeview (HDF5TreeWidget): treeview
     """
-
-
-    grp = get_current_hdf5_group(self,item)
+    grp = get_current_hdf5_group(self, item)
     data = get_group_data(grp)
 
     if data.ndim != 2:
         return
 
-    data_dict = {'_map':data}
+    data_dict = {'_map': data}
     treeview.emitDict.emit(data_dict)
 
     data_dict = {}
-    cmd  = "%matplotlib inline\nimport matplotlib.pyplot as plt\n"
+    # cmd = "%matplotlib inline"
+    cmd = "import matplotlib.pyplot as plt\n"
     cmd += "plt.imshow(_map)\n"
     cmd += "plt.show()\n"
     data_dict['exec_cmd'] = cmd
