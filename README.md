@@ -9,3 +9,8 @@
 
 For more information check out the documentation at: http://h5xplorer.readthedocs.io/en/latest/index.html
 
+## How to install
+Install using pip:
+```
+pip install h5explorer
+```
