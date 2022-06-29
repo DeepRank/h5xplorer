@@ -24,5 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install-python-and-package
+        with:
+          extras-require: publishing
       - name: Verify that we can build the package
-        run: python3 setup.py sdist bdist_wheel
+        run: python3 -m build
