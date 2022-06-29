@@ -28,7 +28,6 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
         cache: 'pip'
-        cache-dependency-path: setup.cfg
 
     - name: Setup conda
       uses: s-weigand/setup-conda@v1
