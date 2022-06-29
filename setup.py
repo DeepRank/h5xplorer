@@ -49,5 +49,6 @@ setup(
         'dev': ['prospector[with_pyroma]', 'yapf', 'isort'],
         'doc': ['recommonmark', 'sphinx', 'sphinx_rtd_theme'],
         'test': ['nose','coverage', 'pycodestyle', 'pytest', 'pytest-cov', 'pytest-runner','coveralls'],
+        'publishing': ['build', 'twine', 'wheel']
     }
 )
