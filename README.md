@@ -12,5 +12,5 @@ For more information check out the documentation at: http://h5xplorer.readthedoc
 ## How to install
 Install using pip:
 ```
-pip install h5explorer
+pip install h5xplorer
 ```
